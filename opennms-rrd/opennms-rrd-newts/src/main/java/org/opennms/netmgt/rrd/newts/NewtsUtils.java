@@ -10,10 +10,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.opennms.netmgt.rrd.RrdDataSource;
-import org.opennms.newts.api.Absolute;
-import org.opennms.newts.api.Counter;
-import org.opennms.newts.api.Derive;
-import org.opennms.newts.api.Gauge;
 import org.opennms.newts.api.MetricType;
 import org.opennms.newts.api.Resource;
 import org.opennms.newts.api.Sample;
@@ -25,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.primitives.UnsignedLong;
 
 /**
  * Utilities for converting from the world of RRD to Newts.
@@ -103,7 +98,7 @@ public class NewtsUtils {
                     def.getResource(),
                     ds.getName(),
                     ds.getMetricType(),
-                    getSampleValue(ds.getMetricType(), val),
+                    ValueType.compose(val, ds.getMetricType()),
                     attributes
                 )
             );
@@ -170,23 +165,6 @@ public class NewtsUtils {
             return MetricType.COUNTER;
         } else {
             return MetricType.ABSOLUTE;
-        }
-    }
-
-    /**
-     * Creates an instance of the appropriate type with the given value
-     */
-    protected static ValueType<?> getSampleValue(MetricType type, Double value) {
-        switch(type) {
-        case COUNTER:
-            return new Counter(value.longValue());
-        case DERIVE:
-            return new Derive(UnsignedLong.valueOf(value.longValue()));
-        case GAUGE:
-            return new Gauge(value);
-        case ABSOLUTE:
-        default:
-            return new Absolute(UnsignedLong.valueOf(value.longValue()));
         }
     }
 }
