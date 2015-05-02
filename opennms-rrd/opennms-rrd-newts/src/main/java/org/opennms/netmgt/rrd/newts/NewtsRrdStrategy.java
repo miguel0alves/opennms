@@ -112,7 +112,7 @@ public class NewtsRrdStrategy implements RrdStrategy<RrdDef, RrdDb> {
         }
     }
 
-    private void maybeStartConsumerThread() {
+    private void maybeStartPersistorThread() {
         if (m_persistorThread != null) {
             return;
         }
@@ -164,7 +164,7 @@ public class NewtsRrdStrategy implements RrdStrategy<RrdDef, RrdDb> {
         LOG.debug("Adding {} samples to the queue.", samples.size());
         m_sampleQueue.add(samples);
 
-        maybeStartConsumerThread();
+        maybeStartPersistorThread();
     }
 
     /////////
