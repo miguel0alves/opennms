@@ -72,13 +72,15 @@ public class NewtsPersistor implements Runnable {
 
         try {
             while(true) {
-                List<Sample> flattenedSamples = Lists.newLinkedList();
+                final List<Collection<Sample>> samples = Lists.newLinkedList();
+                final List<Sample> flattenedSamples = Lists.newLinkedList();
+
                 // Block and wait for an element
-                final Collection<Sample> samples = m_queue.take();
+                samples.add(m_queue.take());
                 try {
                     // Grab all of the remaining samples on the queue and flatten them
-                    flattenedSamples = Lists.newLinkedList(samples);
-                    m_queue.stream().forEach(flattenedSamples::addAll);
+                    m_queue.drainTo(samples);
+                    samples.stream().forEach(flattenedSamples::addAll);
 
                     LOG.debug("Inserting {} samples", flattenedSamples.size());
                     getSampleRepository().insert(flattenedSamples);
