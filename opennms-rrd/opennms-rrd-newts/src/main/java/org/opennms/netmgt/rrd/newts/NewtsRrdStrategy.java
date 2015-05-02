@@ -59,9 +59,9 @@ public class NewtsRrdStrategy implements RrdStrategy<RrdDef, RrdDb> {
 
     public static final String DEFAULT_TTL = "" + 86400 * 365;
 
-    public static final int QUEUE_CAPACITY = 2048;
+    private static final int QUEUE_CAPACITY = 2048;
 
-    public static final String FILE_EXTENSION = ".newts";
+    protected static final String FILE_EXTENSION = ".newts";
 
     private static final Logger LOG = LoggerFactory.getLogger(NewtsRrdStrategy.class);
 

@@ -33,13 +33,22 @@ import com.google.common.collect.Lists;
  */
 public class NewtsPersistor implements Runnable {
 
-    public static final boolean NO_DELAY = false;
-
-    public static final long DELAY_IN_MS = 250;
-
-    public static final long MAX_CACHE_ENTRIES = 4096;
-
     private static final Logger LOG = LoggerFactory.getLogger(NewtsPersistor.class);
+
+    private static final boolean NO_DELAY = false;
+
+    private static final long DELAY_IN_MS = 250;
+
+    // Ideally this value would correspond to the number of unique resource this system
+    // may process. However, this comes at the cost of storing a ResourceMetadata object
+    // for every one of these.
+    private static final long MAX_CACHE_ENTRIES = 4096;
+
+    private static final int SAMPLE_PROCESSOR_MAX_THREADS = 4;
+
+    private static final String CASSANDRA_COMPRESSION = "LZ4";
+
+    private static final long DELAY_AFTER_FAILURE_IN_MS = 5 * 1000;
 
     private final String m_hostname;
 
@@ -121,7 +130,7 @@ public class NewtsPersistor implements Runnable {
                     }
 
                     // Rest before trying again
-                    Thread.sleep(5 * 1000);
+                    Thread.sleep(DELAY_AFTER_FAILURE_IN_MS);
                 }
             }
         } catch (InterruptedException e) {
@@ -131,7 +140,7 @@ public class NewtsPersistor implements Runnable {
 
     private synchronized CassandraSession getSession() {
         if (m_session == null) {
-            m_session = new CassandraSession(m_keyspace, m_hostname, m_port, "NONE");
+            m_session = new CassandraSession(m_keyspace, m_hostname, m_port, CASSANDRA_COMPRESSION);
         }
         return m_session;
     }
@@ -146,7 +155,7 @@ public class NewtsPersistor implements Runnable {
     public synchronized SampleRepository getSampleRepository() {
         if (m_sampleRepository == null) {
             // Create an empty sample processor service
-            SampleProcessorService processors = new SampleProcessorService(32, Collections.emptySet());
+            SampleProcessorService processors = new SampleProcessorService(SAMPLE_PROCESSOR_MAX_THREADS, Collections.emptySet());
 
             // Sample repositories are used for reading/writing
             m_sampleRepository = new CassandraSampleRepository(getSession(), m_ttl, m_registry, processors);
