@@ -33,6 +33,10 @@ import com.google.common.collect.Lists;
  */
 public class NewtsPersistor implements Runnable {
 
+    public static final boolean NO_DELAY = false;
+
+    public static final long DELAY_IN_MS = 250;
+
     public static final long MAX_CACHE_ENTRIES = 4096;
 
     private static final Logger LOG = LoggerFactory.getLogger(NewtsPersistor.class);
@@ -78,6 +82,15 @@ public class NewtsPersistor implements Runnable {
                 // Block and wait for an element
                 samples.add(m_queue.take());
                 try {
+                    if (!NO_DELAY) {
+                        // We only have a single sample, if there are no other samples
+                        // pending on the queue, then sleep for short delay before
+                        // checking again and initiating the insert
+                        if (m_queue.size() == 0) {
+                            Thread.sleep(DELAY_IN_MS);
+                        }
+                    }
+
                     // Grab all of the remaining samples on the queue and flatten them
                     m_queue.drainTo(samples);
                     samples.stream().forEach(flattenedSamples::addAll);
