@@ -46,7 +46,7 @@ public class NewtsPersistor implements Runnable {
 
     private static final int SAMPLE_PROCESSOR_MAX_THREADS = 4;
 
-    private static final String CASSANDRA_COMPRESSION = "LZ4";
+    private static final String CASSANDRA_COMPRESSION = "NONE";
 
     private static final long DELAY_AFTER_FAILURE_IN_MS = 5 * 1000;
 
