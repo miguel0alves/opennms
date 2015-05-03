@@ -162,7 +162,9 @@ public class NewtsRrdStrategy implements RrdStrategy<RrdDef, RrdDb> {
         final Map<String, String> attributes = m_attrsByPath.get(db.getPath());
         final List<Sample> samples = NewtsUtils.getSamplesFromRrdUpdateString(def, data, attributes);
         LOG.debug("Adding {} samples to the queue.", samples.size());
-        m_sampleQueue.add(samples);
+        if (!m_sampleQueue.offer(samples)) {
+            LOG.warn("The queue rejected {} samples. These will be lost.", samples.size());
+        }
 
         maybeStartPersistorThread();
     }
