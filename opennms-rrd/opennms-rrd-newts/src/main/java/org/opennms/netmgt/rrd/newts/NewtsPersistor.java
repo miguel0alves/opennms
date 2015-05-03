@@ -84,9 +84,12 @@ public class NewtsPersistor implements Runnable {
         Logging.putPrefix("collectd");
 
         try {
+            final List<Collection<Sample>> samples = Lists.newLinkedList();
+            final List<Sample> flattenedSamples = Lists.newLinkedList();
+
             while(true) {
-                final List<Collection<Sample>> samples = Lists.newLinkedList();
-                final List<Sample> flattenedSamples = Lists.newLinkedList();
+                samples.clear();
+                flattenedSamples.clear();
 
                 // Block and wait for an element
                 samples.add(m_queue.take());
