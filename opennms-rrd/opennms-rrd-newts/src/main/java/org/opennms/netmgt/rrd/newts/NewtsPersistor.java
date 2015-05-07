@@ -48,15 +48,7 @@ public class NewtsPersistor implements Runnable {
 
     private static final int SAMPLE_PROCESSOR_MAX_THREADS = 4;
 
-    private static final String CASSANDRA_COMPRESSION = "NONE";
-
     private static final long DELAY_AFTER_FAILURE_IN_MS = 5 * 1000;
-
-    private final String m_hostname;
-
-    private final int m_port;
-
-    private final String m_keyspace;
 
     private final int m_ttl;
 
@@ -72,10 +64,7 @@ public class NewtsPersistor implements Runnable {
 
     private CassandraIndexer m_indexer = null;
 
-    public NewtsPersistor(String hostname, int port, String keyspace, int ttl, LinkedBlockingQueue<Collection<Sample>> queue) {
-        m_hostname = hostname;
-        m_port = port;
-        m_keyspace = keyspace;
+    public NewtsPersistor(int ttl, LinkedBlockingQueue<Collection<Sample>> queue) {
         m_ttl = ttl;
         m_queue = queue;
     }
@@ -139,7 +128,7 @@ public class NewtsPersistor implements Runnable {
 
     private synchronized CassandraSession getSession() {
         if (m_session == null) {
-            m_session = new CassandraSession(m_keyspace, m_hostname, m_port, CASSANDRA_COMPRESSION);
+            m_session = NewtsUtils.getCassrandraSession();
         }
         return m_session;
     }

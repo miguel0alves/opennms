@@ -58,6 +58,7 @@ import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.LocationMonitorDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.ResourceDao;
+import org.opennms.netmgt.dao.util.ResourcePathResolver;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsLocationMonitor;
 import org.opennms.netmgt.model.OnmsNode;
@@ -85,6 +86,7 @@ public class DefaultResourceDao implements ResourceDao, InitializingBean {
     /** Constant <code>INTERFACE_GRAPH_TYPE="interface"</code> */
     public static final String INTERFACE_GRAPH_TYPE = "interface";
 
+    private ResourcePathResolver m_resourceResolver;
     private NodeDao m_nodeDao;
     private LocationMonitorDao m_locationMonitorDao;
     private IpInterfaceDao m_ipInterfaceDao;
@@ -102,6 +104,14 @@ public class DefaultResourceDao implements ResourceDao, InitializingBean {
      * <p>Constructor for DefaultResourceDao.</p>
      */
     public DefaultResourceDao() {
+    }
+
+    public void setResourceResolver(ResourcePathResolver resourceResolver) {
+        m_resourceResolver = resourceResolver;
+    }
+
+    public ResourcePathResolver getResourceResolver() {
+        return m_resourceResolver;
     }
 
     /**
@@ -240,6 +250,10 @@ public class DefaultResourceDao implements ResourceDao, InitializingBean {
             throw new IllegalStateException("locationMonitorDao property has not been set");
         }
 
+        if (m_resourceResolver == null) {
+            throw new IllegalStateException("resourceResolver property has not been set");
+        }
+
         initResourceTypes();
     }
     
@@ -255,7 +269,7 @@ public class DefaultResourceDao implements ResourceDao, InitializingBean {
         resourceType = new InterfaceSnmpResourceType(this, m_nodeDao);
         resourceTypes.put(resourceType.getName(), resourceType);
         
-        resourceType = new ResponseTimeResourceType(this, m_nodeDao, m_ipInterfaceDao);
+        resourceType = new ResponseTimeResourceType(m_nodeDao, m_ipInterfaceDao, m_resourceResolver);
         resourceTypes.put(resourceType.getName(), resourceType);
         
         resourceType = new DistributedStatusResourceType(this, m_locationMonitorDao);
@@ -506,8 +520,8 @@ public class DefaultResourceDao implements ResourceDao, InitializingBean {
         List<OnmsResource> resources = new LinkedList<OnmsResource>();
 
         Set<Integer> snmpNodes = findSnmpNodeDirectories();
-        Set<String> nodeSources = findNodeSourceDirectories();
-        Set<String> responseTimeInterfaces = findChildrenMatchingFilter(new File(getRrdDirectory(), ResourceTypeUtils.RESPONSE_DIRECTORY), RrdFileConstants.INTERFACE_DIRECTORY_FILTER);
+        Set<String> nodeSources = m_resourceResolver.findNodeSourceDirectories();
+        Set<String> responseTimeInterfaces = m_resourceResolver.findResponseTimeDirectories();
         Set<String> distributedResponseTimeInterfaces = findChildrenChildrenMatchingFilter(new File(new File(getRrdDirectory(), ResourceTypeUtils.RESPONSE_DIRECTORY), "distributed"), RrdFileConstants.INTERFACE_DIRECTORY_FILTER);
 
         List<OnmsNode> nodes = m_nodeDao.findAll();
@@ -667,45 +681,6 @@ public class DefaultResourceDao implements ResourceDao, InitializingBean {
         }
         
         return nodes;
-    }
-    
-    /**
-     * <p>findNodeSourceDirectories</p>
-     *
-     * @return a Set<String> of directory names.
-     */
-    protected Set<String> findNodeSourceDirectories() {
-       Set<String> nodeSourceDirectories = new HashSet<String>();
-       File snmpDir = new File(getRrdDirectory(), ResourceTypeUtils.SNMP_DIRECTORY);
-       File forSrcDir = new File(snmpDir, ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY);
-       File[] sourceDirs = forSrcDir.listFiles(); // TODO There is no need to filter by RrdFileConstants.SOURCE_DIRECTORY_FILTER
-       if (sourceDirs != null && sourceDirs.length > 0) {
-           for (File sourceDir : sourceDirs) {
-               File [] ids = sourceDir.listFiles(RrdFileConstants.NODESOURCE_DIRECTORY_FILTER);
-               for (File id : ids) {
-                   nodeSourceDirectories.add(sourceDir.getName() + ":" + id.getName());
-               }
-           }
-       }
-       
-       return nodeSourceDirectories;
-       
-    }
-
-    private static Set<String> findChildrenMatchingFilter(File directory, FileFilter filter) {
-        Set<String> children = new HashSet<String>();
-        
-        File[] nodeDirs = directory.listFiles(filter);
-
-        if (nodeDirs == null || nodeDirs.length == 0) {
-            return children;
-        }
-
-        for (File nodeDir : nodeDirs) {
-            children.add(nodeDir.getName());
-        }
-        
-        return children;
     }
 
     /**

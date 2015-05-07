@@ -45,9 +45,9 @@ public class NewtsRrdStrategyITest extends AbstractCassandraTestCase {
 
         // Point to our test server
         Properties props = new Properties();
-        props.put(NewtsRrdStrategy.HOSTNAME_PROPERTY, CASSANDRA_HOST);
-        props.put(NewtsRrdStrategy.PORT_PROPERTY, "" + CASSANDRA_PORT);
-        props.put(NewtsRrdStrategy.KEYSPACE_PROPERTY, CASSANDRA_KEYSPACE);
+        props.put(NewtsUtils.HOSTNAME_PROPERTY, CASSANDRA_HOST);
+        props.put(NewtsUtils.PORT_PROPERTY, "" + CASSANDRA_PORT);
+        props.put(NewtsUtils.KEYSPACE_PROPERTY, CASSANDRA_KEYSPACE);
         newtsRrdStrategy.setConfigurationProperties(props);
 
         opennmsHome = System.getProperty("opennms.home");

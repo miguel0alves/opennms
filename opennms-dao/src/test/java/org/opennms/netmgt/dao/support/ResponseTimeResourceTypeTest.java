@@ -40,12 +40,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.util.ResourcePathResolver;
+import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
@@ -68,7 +71,9 @@ public class ResponseTimeResourceTypeTest {
 
     private Set<OnmsIpInterface> ipInterfaces = new HashSet<OnmsIpInterface>();
 
-    private ResponseTimeResourceType responseTimeResourceType = new ResponseTimeResourceType(resourceDao, nodeDao, ipInterfaceDao);
+    private ResourcePathResolver resourceResolver = createMock(ResourcePathResolver.class);
+
+    private ResponseTimeResourceType responseTimeResourceType = new ResponseTimeResourceType(nodeDao, ipInterfaceDao, resourceResolver);
 
     @Before
     public void setUp() {
@@ -84,9 +89,14 @@ public class ResponseTimeResourceTypeTest {
         expect(node.getIpInterfaces()).andReturn(ipInterfaces);
         expect(ipInterface.getIpAddress()).andReturn(InetAddress.getByName("127.0.0.1")).atLeastOnce();
 
-        replay(nodeDao, node, ipInterface);
+        resourceResolver.exists(ResourceTypeUtils.RESPONSE_DIRECTORY, "127.0.0.1");
+        EasyMock.expectLastCall().andReturn(true);
+
+        expect(resourceResolver.getAttributes(ResourceTypeUtils.RESPONSE_DIRECTORY, "127.0.0.1")).andReturn(new HashSet<OnmsAttribute>());
+
+        replay(nodeDao, node, ipInterface, resourceResolver);
         List<OnmsResource> resources = responseTimeResourceType.getResourcesForNode(1);
-        verify(nodeDao, node, ipInterface);
+        verify(nodeDao, node, ipInterface, resourceResolver);
 
         assertEquals(1, resources.size());
         assertEquals("127.0.0.1", resources.get(0).getName());
@@ -96,13 +106,14 @@ public class ResponseTimeResourceTypeTest {
     public void canGetChildByName() throws IOException {
         expect(ipInterface.getIpAddress()).andReturn(InetAddress.getByName("127.0.0.1")).atLeastOnce();
         expect(ipInterfaceDao.get(node, "127.0.0.1")).andReturn(ipInterface);
+        expect(resourceResolver.getAttributes(ResourceTypeUtils.RESPONSE_DIRECTORY, "127.0.0.1")).andReturn(new HashSet<OnmsAttribute>());
 
         OnmsResource parent = createMock(OnmsResource.class);
         expect(parent.getEntity()).andReturn(node);
 
-        replay(ipInterface, parent, ipInterfaceDao);
+        replay(ipInterface, parent, ipInterfaceDao, resourceResolver);
         OnmsResource resource = responseTimeResourceType.getChildByName(parent, "127.0.0.1");
-        verify(ipInterface, parent, ipInterfaceDao);
+        verify(ipInterface, parent, ipInterfaceDao, resourceResolver);
 
         assertEquals("127.0.0.1", resource.getName());
         assertEquals(parent, resource.getParent());

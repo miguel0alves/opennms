@@ -15,6 +15,7 @@ import org.opennms.newts.api.Resource;
 import org.opennms.newts.api.Sample;
 import org.opennms.newts.api.Timestamp;
 import org.opennms.newts.api.ValueType;
+import org.opennms.newts.cassandra.CassandraSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,35 @@ public class NewtsUtils {
     private static final Logger LOG = LoggerFactory.getLogger(NewtsUtils.class);
 
     private static final Pattern UPDATE_STRING_PATTERN = Pattern.compile("^(\\d+):(.*)");
+
+    public static final String HOSTNAME_PROPERTY = "org.opennms.newts.config.hostname";
+
+    public static final String KEYSPACE_PROPERTY = "org.opennms.newts.config.keyspace";
+
+    public static final String PORT_PROPERTY = "org.opennms.newts.config.port";
+
+    public static final String TTL_PROPERTY = "org.opennms.newts.config.ttl";
+    
+    public static final String DEFAULT_HOSTNAME = "localhost";
+
+    public static final String DEFAULT_KEYSPACE = "newts";
+
+    public static final String DEFAULT_PORT = "9043";
+
+    public static final String DEFAULT_TTL = "" + 86400 * 365;
+
+    private static final String CASSANDRA_COMPRESSION = "NONE";
+
+    public static CassandraSession getCassrandraSession() {
+        String hostname = System.getProperty(HOSTNAME_PROPERTY, DEFAULT_HOSTNAME);
+        int port = Integer.valueOf(System.getProperty(PORT_PROPERTY, DEFAULT_PORT));
+        String keyspace = System.getProperty(KEYSPACE_PROPERTY, DEFAULT_KEYSPACE);
+
+        LOG.info("Using hostname {}, port {} and keyspace {}.",
+                hostname, port, keyspace);
+
+        return new CassandraSession(keyspace, hostname, port, CASSANDRA_COMPRESSION);
+    }
 
     /**
      * Converts a 'rrd update' command string to a list of samples.

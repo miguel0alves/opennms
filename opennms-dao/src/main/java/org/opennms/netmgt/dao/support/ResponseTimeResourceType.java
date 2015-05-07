@@ -28,7 +28,6 @@
 
 package org.opennms.netmgt.dao.support;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,7 +37,7 @@ import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.LazySet;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
-import org.opennms.netmgt.dao.api.ResourceDao;
+import org.opennms.netmgt.dao.util.ResourcePathResolver;
 import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
@@ -55,23 +54,22 @@ import org.springframework.orm.ObjectRetrievalFailureException;
 public class ResponseTimeResourceType implements OnmsResourceType {
     
     private static final Logger LOG = LoggerFactory.getLogger(ResponseTimeResourceType.class);
-    
-    private final ResourceDao m_resourceDao;
+
     private final NodeDao m_nodeDao;
     private final IpInterfaceDao m_ipInterfaceDao;
+    private final ResourcePathResolver m_resourceResolver;
 
     /**
      * <p>Constructor for ResponseTimeResourceType.</p>
      *
-     * @param resourceDao a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
      */
-    public ResponseTimeResourceType(final ResourceDao resourceDao, final NodeDao nodeDao, final IpInterfaceDao ipInterfaceDao) {
-        m_resourceDao = resourceDao;
+    public ResponseTimeResourceType(final NodeDao nodeDao, final IpInterfaceDao ipInterfaceDao, final ResourcePathResolver resourceResolver) {
         m_nodeDao = nodeDao;
         m_ipInterfaceDao = ipInterfaceDao;
+        m_resourceResolver = resourceResolver;
     }
-    
+
     /**
      * <p>getLabel</p>
      *
@@ -111,9 +109,7 @@ public class ResponseTimeResourceType implements OnmsResourceType {
         for (final OnmsIpInterface i : node.getIpInterfaces()) {
             String ipAddr = InetAddressUtils.str(i.getIpAddress());
 
-            final File iface = getInterfaceDirectory(ipAddr, false);
-            
-            if (iface.isDirectory()) {
+            if(m_resourceResolver.exists(ResourceTypeUtils.RESPONSE_DIRECTORY, ipAddr)) {
                 resources.add(createResource(i));
             }
         }
@@ -138,28 +134,19 @@ public class ResponseTimeResourceType implements OnmsResourceType {
         resource.setParent(parent);
         return resource;
     }
-
-    private File getInterfaceDirectory(final String ipAddr, final boolean verify) {
-    	final File response = new File(m_resourceDao.getRrdDirectory(verify), ResourceTypeUtils.RESPONSE_DIRECTORY);
-        
-    	final File intfDir = new File(response, ipAddr);
-        if (verify && !intfDir.isDirectory()) {
-            throw new ObjectRetrievalFailureException(File.class, "No interface directory exists for " + ipAddr + ": " + intfDir);
-        }
-
-        return intfDir;
-    }
     
+    /*
     private String getRelativeInterfacePath(final String ipAddr) {
         return ResourceTypeUtils.RESPONSE_DIRECTORY + File.separator + ipAddr;
     }
+    */
     
     private OnmsResource createResource(final OnmsIpInterface ipInterface) {
-    	final String intf = InetAddressUtils.str(ipInterface.getIpAddress());
-    	final String label = intf;
-    	final String resource = intf;
+    	final String ipAddr = InetAddressUtils.str(ipInterface.getIpAddress());
+    	final String label = ipAddr;
+    	final String resource = ipAddr;
 
-    	final Set<OnmsAttribute> set = new LazySet<OnmsAttribute>(new AttributeLoader(intf));
+    	final Set<OnmsAttribute> set = new LazySet<OnmsAttribute>(new AttributeLoader(m_resourceResolver, ipAddr));
     	final OnmsResource r = new OnmsResource(resource, label, this, set);
         r.setEntity(ipInterface);
         return r;
@@ -178,17 +165,19 @@ public class ResponseTimeResourceType implements OnmsResourceType {
         return getResourcesForNode(nodeId).size() > 0;
     }
 
-    public class AttributeLoader implements LazySet.Loader<OnmsAttribute> {
-        private String m_intf;
+    public static class AttributeLoader implements LazySet.Loader<OnmsAttribute> {
+        private final ResourcePathResolver m_resourceResolver;
+        private final String m_ipAddr;
 
-        public AttributeLoader(final String intf) {
-            m_intf = intf;
+        public AttributeLoader(final ResourcePathResolver resourceResolver, final String ipAddr) {
+            m_resourceResolver = resourceResolver;
+            m_ipAddr = ipAddr;
         }
 
         @Override
         public Set<OnmsAttribute> load() {
-            LOG.debug("lazy-loading attributes for response time resource '{}'", m_intf);
-            return ResourceTypeUtils.getAttributesAtRelativePath(m_resourceDao.getRrdDirectory(), getRelativeInterfacePath(m_intf));
+            LOG.debug("lazy-loading attributes for response time resource '{}'", m_ipAddr);
+            return m_resourceResolver.getAttributes(ResourceTypeUtils.RESPONSE_DIRECTORY, m_ipAddr);
         }
     }
 

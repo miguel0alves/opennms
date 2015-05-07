@@ -493,15 +493,26 @@
 
   <onmsgi:service interface="org.opennms.netmgt.dao.api.TopologyDao" ref="topologyDao" />
 
+  <bean id="fsResourceResolver" class="org.opennms.netmgt.dao.support.FilesystemResourcePathResolver">
+    <property name="rrdDirectory" value="${rrd.base.dir}" />
+  </bean>
+
+  <onmsgi:service interface="org.opennms.netmgt.dao.util.ResourcePathResolver" ref="fsResourceResolver" />
+
+  <bean id="newtsResourceResolver" class="org.opennms.netmgt.dao.support.NewtsResourcePathResolver" />
+
+  <onmsgi:service interface="org.opennms.netmgt.dao.util.ResourcePathResolver" ref="newtsResourceResolver" />
+
   <bean id="resourceDao" class="org.opennms.netmgt.dao.support.DefaultResourceDao">
     <property name="nodeDao" ref="nodeDao" />
     <property name="locationMonitorDao" ref="locationMonitorDao" />
     <property name="ipInterfaceDao" ref="ipInterfaceDao" />
     <property name="collectdConfig" ref="collectdConfig" />
     <property name="dataCollectionConfigDao" ref="dataCollectionConfig" />
+    <property name="resourceResolver" ref="newtsResourceResolver" />
     <property name="rrdDirectory" value="${rrd.base.dir}" />
   </bean>
-  
+
   <onmsgi:service interface="org.opennms.netmgt.dao.api.ResourceDao" ref="resourceDao" />
 
   <bean id="rrdStrategy" class="org.opennms.netmgt.rrd.RrdUtils" factory-method="getStrategy"/>

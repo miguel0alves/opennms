@@ -43,22 +43,6 @@ import com.google.common.collect.Queues;
  */
 public class NewtsRrdStrategy implements RrdStrategy<RrdDef, RrdDb> {
 
-    protected static final String HOSTNAME_PROPERTY = "org.opennms.newts.config.hostname";
-
-    protected static final String KEYSPACE_PROPERTY = "org.opennms.newts.config.keyspace";
-
-    protected static final String PORT_PROPERTY = "org.opennms.newts.config.port";
-
-    protected static final String TTL_PROPERTY = "org.opennms.newts.config.ttl";
-
-    public static final String DEFAULT_HOSTNAME = "localhost";
-
-    public static final String DEFAULT_KEYSPACE = "newts";
-
-    public static final String DEFAULT_PORT = "9043";
-
-    public static final String DEFAULT_TTL = "" + 86400 * 365;
-
     private static final int QUEUE_CAPACITY = 2048;
 
     protected static final String FILE_EXTENSION = ".newts";
@@ -68,12 +52,6 @@ public class NewtsRrdStrategy implements RrdStrategy<RrdDef, RrdDb> {
     /////////
     // Newts
     /////////
-
-    private String m_keyspace;
-
-    private String m_hostname;
-
-    private int m_port;
 
     private NewtsPersistor m_persistor;
     
@@ -92,20 +70,16 @@ public class NewtsRrdStrategy implements RrdStrategy<RrdDef, RrdDb> {
     
     @Override
     public synchronized void setConfigurationProperties(Properties props) {
-        m_hostname = (String)props.getOrDefault(HOSTNAME_PROPERTY, DEFAULT_HOSTNAME);
-        m_port = Integer.valueOf((String)props.getOrDefault(PORT_PROPERTY, DEFAULT_PORT));
-        m_keyspace = (String)props.getOrDefault(KEYSPACE_PROPERTY, DEFAULT_KEYSPACE);
-        m_ttl = Integer.valueOf((String)props.getOrDefault(TTL_PROPERTY, DEFAULT_TTL));
+        m_ttl = Integer.valueOf((String)props.getOrDefault(NewtsUtils.TTL_PROPERTY, NewtsUtils.DEFAULT_TTL));
 
-        LOG.info("Using hostname {}, port {}, keyspace {} and ttl {}",
-                m_keyspace, m_hostname, m_port, m_ttl);
+        LOG.info("Using ttl {}", m_ttl);
 
         if (m_persistorThread != null) {
             LOG.warn("Persistor already started.");
         } else {
             LOG.info("Starting persistor thread.");
 
-            m_persistor = new NewtsPersistor(m_hostname, m_port, m_keyspace, m_ttl, m_sampleQueue);
+            m_persistor = new NewtsPersistor(m_ttl, m_sampleQueue);
             m_persistorThread = new Thread(m_persistor);
             m_persistorThread.setName("NewtsPersistor");
             m_persistorThread.start();

@@ -77,6 +77,7 @@ public class DefaultResourceDaoTest extends TestCase {
     private DataCollectionConfigDao m_dataCollectionConfigDao;
     private DefaultResourceDao m_resourceDao;
     private IpInterfaceDao m_ipInterfaceDao;
+    private FilesystemResourcePathResolver m_fsResourceResolver;
 
     private FileAnticipator m_fileAnticipator;
 
@@ -110,7 +111,12 @@ public class DefaultResourceDaoTest extends TestCase {
         m_resourceDao.setCollectdConfig(m_collectdConfig);
         m_resourceDao.setRrdDirectory(m_fileAnticipator.getTempDir());
         m_resourceDao.setDataCollectionConfigDao(m_dataCollectionConfigDao);
-        
+        m_resourceDao.setDataCollectionConfigDao(m_dataCollectionConfigDao);
+
+        m_fsResourceResolver = new FilesystemResourcePathResolver();
+        m_fsResourceResolver.setRrdDirectory(m_fileAnticipator.getTempDir());
+        m_resourceDao.setResourceResolver(m_fsResourceResolver);
+
         RrdUtils.setStrategy(new JRobinRrdStrategy());
         
         expect(m_dataCollectionConfigDao.getConfiguredResourceTypes()).andReturn(new HashMap<String, ResourceType>());
@@ -560,7 +566,7 @@ public class DefaultResourceDaoTest extends TestCase {
         m_fileAnticipator.tempFile(idDir, "foo" + RrdUtils.getExtension());
 
         m_easyMockUtils.replayAll();
-        Set<String> directories = m_resourceDao.findNodeSourceDirectories();
+        Set<String> directories = m_resourceDao.getResourceResolver().findNodeSourceDirectories();
         m_easyMockUtils.verifyAll();
 
         assertNotNull("Directories should not be null", directories);
@@ -575,7 +581,7 @@ public class DefaultResourceDaoTest extends TestCase {
         m_fileAnticipator.tempFile(idDir, "foo");
 
         m_easyMockUtils.replayAll();
-        Set<String> directories = m_resourceDao.findNodeSourceDirectories();
+        Set<String> directories = m_resourceDao.getResourceResolver().findNodeSourceDirectories();
         m_easyMockUtils.verifyAll();
 
         assertNotNull("Directories should not be null", directories);
