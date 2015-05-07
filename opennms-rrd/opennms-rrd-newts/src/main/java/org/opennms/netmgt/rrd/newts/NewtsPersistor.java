@@ -1,18 +1,19 @@
 package org.opennms.netmgt.rrd.newts;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.opennms.core.logging.Logging;
 import org.opennms.newts.api.Sample;
+import org.opennms.newts.api.SampleProcessor;
 import org.opennms.newts.api.SampleProcessorService;
 import org.opennms.newts.api.SampleRepository;
-import org.opennms.newts.api.search.Indexer;
 import org.opennms.newts.cassandra.CassandraSession;
 import org.opennms.newts.cassandra.search.CassandraIndexer;
+import org.opennms.newts.cassandra.search.CassandraIndexerSampleProcessor;
 import org.opennms.newts.cassandra.search.GuavaResourceMetadataCache;
 import org.opennms.newts.cassandra.search.ResourceMetadataCache;
 import org.opennms.newts.persistence.cassandra.CassandraSampleRepository;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * The NewtsPersistor is responsible for persisting samples gathered
@@ -68,7 +70,7 @@ public class NewtsPersistor implements Runnable {
 
     private SampleRepository m_sampleRepository = null;
 
-    private Indexer m_indexer = null;
+    private CassandraIndexer m_indexer = null;
 
     public NewtsPersistor(String hostname, int port, String keyspace, int ttl, LinkedBlockingQueue<Collection<Sample>> queue) {
         m_hostname = hostname;
@@ -110,12 +112,6 @@ public class NewtsPersistor implements Runnable {
                     LOG.debug("Inserting {} samples", flattenedSamples.size());
                     getSampleRepository().insert(flattenedSamples);
 
-                    try {
-                        getIndexer().update(flattenedSamples);
-                    } catch (Throwable t) {
-                        LOG.error("An error occured while indexing samples. {} samples will not be indexed.", flattenedSamples.size(), t);
-                    }
-
                     if (LOG.isDebugEnabled()) {
                         String uniqueResourceIds = flattenedSamples.stream()
                             .map(s -> s.getResource().getId())
@@ -148,7 +144,7 @@ public class NewtsPersistor implements Runnable {
         return m_session;
     }
 
-    private synchronized Indexer getIndexer() {
+    private synchronized CassandraIndexer getIndexer() {
         if (m_indexer == null) {
             m_indexer = new CassandraIndexer(getSession(), m_ttl, m_cache, m_registry);
         }
@@ -157,8 +153,9 @@ public class NewtsPersistor implements Runnable {
 
     public synchronized SampleRepository getSampleRepository() {
         if (m_sampleRepository == null) {
-            // Create an empty sample processor service
-            SampleProcessorService processors = new SampleProcessorService(SAMPLE_PROCESSOR_MAX_THREADS, Collections.emptySet());
+            // Index the samples
+            Set<SampleProcessor> sampleProcessors = Sets.newHashSet(new CassandraIndexerSampleProcessor(getIndexer()));
+            SampleProcessorService processors = new SampleProcessorService(SAMPLE_PROCESSOR_MAX_THREADS, sampleProcessors);
 
             // Sample repositories are used for reading/writing
             m_sampleRepository = new CassandraSampleRepository(getSession(), m_ttl, m_registry, processors);
