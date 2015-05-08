@@ -1,5 +1,7 @@
 package org.opennms.netmgt.dao.support;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -25,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -105,8 +108,11 @@ public class NewtsResourcePathResolver implements ResourcePathResolver {
         }
 
         for (String metric : result.getMetrics()) {
-            // Use the metric name as the dsName - keep everything else empty
-            attributes.add(new RrdGraphAttribute(metric, "", ""));
+            // Use the metric name as the dsName
+            // Store the resource id in the rrdFile field
+            List<String> path = Lists.newArrayList(pathComponents);
+            path.add(metric);
+            attributes.add(new RrdGraphAttribute(metric, "", toResourceId(type, path.toArray(new String[path.size()]))));
         }
 
         Map<String, String> resourceAttributes = result.getResource().getAttributes().orNull();
