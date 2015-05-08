@@ -46,6 +46,9 @@ public class NewtsFetchStrategy implements MeasurementFetchStrategy {
     @Override
     public FetchResults fetch(long start, long end, long step, int maxrows,
             List<Source> sources) throws Exception {
+        
+        // Add a lower bound
+        step = Math.max(300 * 1000, step);
 
         Optional<Timestamp> startTs = Optional.of(Timestamp.fromEpochMillis(start));
         Optional<Timestamp> endTs = Optional.of(Timestamp.fromEpochMillis(end));
@@ -72,7 +75,7 @@ public class NewtsFetchStrategy implements MeasurementFetchStrategy {
             if (resourceId == null) {
                 resourceId = rrdGraphAttribute.getRrdRelativePath();
             } else {
-                if (resourceId != rrdGraphAttribute.getRrdRelativePath()) {
+                if (!resourceId.equals(rrdGraphAttribute.getRrdRelativePath())) {
                     throw new RuntimeException("Newts queries cannot span multiple resource ids!");
                 }
             }
