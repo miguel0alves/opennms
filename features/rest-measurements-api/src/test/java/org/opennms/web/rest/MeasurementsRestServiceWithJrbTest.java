@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
+import org.opennms.netmgt.dao.support.FilesystemResourceResolver;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.opennms.web.rest.measurements.model.Expression;
 import org.opennms.web.rest.measurements.model.QueryRequest;
@@ -76,7 +77,9 @@ public class MeasurementsRestServiceWithJrbTest extends MeasurementsRestServiceT
         File rrdDirectory = new File("src/test/resources/share/jrb");
         assertTrue(rrdDirectory.canRead());
 
-        m_resourceDao.setRrdDirectory(rrdDirectory);
+        FilesystemResourceResolver fsResourceResolver = new FilesystemResourceResolver();
+        fsResourceResolver.setRrdDirectory(rrdDirectory);
+        m_resourceDao.setResourceResolver(fsResourceResolver);
         System.setProperty("rrd.base.dir", rrdDirectory.getAbsolutePath());
     }
 

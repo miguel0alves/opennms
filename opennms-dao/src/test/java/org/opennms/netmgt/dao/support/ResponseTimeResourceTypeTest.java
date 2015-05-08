@@ -47,7 +47,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
-import org.opennms.netmgt.dao.util.ResourcePathResolver;
+import org.opennms.netmgt.dao.util.ResourceResolver;
 import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
@@ -61,6 +61,8 @@ public class ResponseTimeResourceTypeTest {
 
     private DefaultResourceDao resourceDao = new DefaultResourceDao();
 
+    private FilesystemResourceResolver filesystemResourceResolver = new FilesystemResourceResolver();
+
     private NodeDao nodeDao = createMock(NodeDao.class);
 
     private IpInterfaceDao ipInterfaceDao = createMock(IpInterfaceDao.class);
@@ -71,13 +73,14 @@ public class ResponseTimeResourceTypeTest {
 
     private Set<OnmsIpInterface> ipInterfaces = new HashSet<OnmsIpInterface>();
 
-    private ResourcePathResolver resourceResolver = createMock(ResourcePathResolver.class);
+    private ResourceResolver resourceResolver = createMock(ResourceResolver.class);
 
-    private ResponseTimeResourceType responseTimeResourceType = new ResponseTimeResourceType(nodeDao, ipInterfaceDao, resourceResolver);
+    private ResponseTimeResourceType responseTimeResourceType = new ResponseTimeResourceType(resourceResolver, nodeDao, ipInterfaceDao);
 
     @Before
     public void setUp() {
-        resourceDao.setRrdDirectory(tempFolder.getRoot());
+        filesystemResourceResolver.setRrdDirectory(tempFolder.getRoot());
+        resourceDao.setResourceResolver(filesystemResourceResolver);
         tempFolder.newFolder(ResourceTypeUtils.RESPONSE_DIRECTORY, "127.0.0.1");
 
         ipInterfaces.add(ipInterface);

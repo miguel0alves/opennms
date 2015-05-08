@@ -31,7 +31,10 @@ package org.opennms.netmgt.model;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -321,6 +324,16 @@ public abstract class ResourceTypeUtils {
     public static File getRelativeNodeSourceDirectory(String nodeSource) {
         String[] ident = nodeSource.split(":");
         return new File(FOREIGN_SOURCE_DIRECTORY, File.separator + ident[0] + File.separator + ident[1]);
+    }
+
+    public static String[] getRelativeNodeSourcePathComponents(String nodeSource, String... after) {
+        String[] ident = nodeSource.split(":");
+        List<String> parts = new ArrayList<String>();
+        parts.add(FOREIGN_SOURCE_DIRECTORY);
+        parts.add(ident[0]);
+        parts.add(ident[1]);
+        parts.addAll(Arrays.asList(after));
+        return parts.toArray(new String[parts.size()]);
     }
 
     /**

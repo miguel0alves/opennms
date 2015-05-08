@@ -131,7 +131,9 @@ public class DefaultResourceService implements ResourceService, InitializingBean
      */
     @Override
     public File getRrdDirectory() {
-        return m_resourceDao.getRrdDirectory();
+        return new File("/tmp");
+        // FIXME
+        //return m_resourceDao.getRrdDirectory();
     }
 
     /**
@@ -260,6 +262,8 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     /** {@inheritDoc} */
     @Override
     public void promoteGraphAttributesForResource(OnmsResource resource) {
+        //FIXME
+        /*
         String baseDir = getRrdDirectory().getAbsolutePath();
         List<String> rrdFiles = new LinkedList<String>();
         for(RrdGraphAttribute attribute : resource.getRrdGraphAttributes().values()) {
@@ -273,6 +277,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
         } catch (EventProxyException e) {
             LOG.warn("Unable to send file promotion event to opennms: {}", e, e);
         }
+        */
     }
     
     /**

@@ -44,6 +44,7 @@ import org.opennms.core.utils.LazySet;
 import org.opennms.core.utils.SIUtils;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.ResourceDao;
+import org.opennms.netmgt.dao.util.ResourceResolver;
 import org.opennms.netmgt.model.ExternalValueAttribute;
 import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -66,7 +67,7 @@ public class InterfaceSnmpResourceType implements OnmsResourceType {
     
     private static final Logger LOG = LoggerFactory.getLogger(InterfaceSnmpResourceType.class);
 
-    private ResourceDao m_resourceDao;
+    private ResourceResolver m_resourceResolver;
     private NodeDao m_nodeDao;
 
     /**
@@ -75,8 +76,8 @@ public class InterfaceSnmpResourceType implements OnmsResourceType {
      * @param resourceDao a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
      */
-    public InterfaceSnmpResourceType(ResourceDao resourceDao, NodeDao nodeDao) {
-        m_resourceDao = resourceDao;
+    public InterfaceSnmpResourceType(final ResourceResolver resourceResolver, NodeDao nodeDao) {
+        m_resourceResolver = resourceResolver;
         m_nodeDao = nodeDao;
     }
 
@@ -115,8 +116,12 @@ public class InterfaceSnmpResourceType implements OnmsResourceType {
         return parent.listFiles(RrdFileConstants.INTERFACE_DIRECTORY_FILTER).length > 0; 
     }
     
+    private static File getRrdDirectory() {
+        return new File("/tmp");
+    }
+    
     private File getParentResourceDirectory(String parentResource, boolean verify) {
-        File snmp = new File(m_resourceDao.getRrdDirectory(verify), ResourceTypeUtils.SNMP_DIRECTORY);
+        File snmp = new File(getRrdDirectory(), ResourceTypeUtils.SNMP_DIRECTORY);
         
         File parent = new File(snmp, parentResource);
         if (verify && !parent.isDirectory()) {
@@ -353,7 +358,7 @@ public class InterfaceSnmpResourceType implements OnmsResourceType {
 
         @Override
         public Set<OnmsAttribute> load() {
-            Set<OnmsAttribute> attributes = ResourceTypeUtils.getAttributesAtRelativePath(m_resourceDao.getRrdDirectory(), getRelativePathForResource(m_parent, m_resource));
+            Set<OnmsAttribute> attributes = ResourceTypeUtils.getAttributesAtRelativePath(getRrdDirectory(), getRelativePathForResource(m_parent, m_resource));
             if (m_ifSpeed != null) {
                 attributes.add(new ExternalValueAttribute("ifSpeed", m_ifSpeed.toString()));
             }
@@ -408,7 +413,7 @@ public class InterfaceSnmpResourceType implements OnmsResourceType {
         }
 
         ArrayList<String> intfs = new ArrayList<String>();
-        File snmp = new File(m_resourceDao.getRrdDirectory(), ResourceTypeUtils.SNMP_DIRECTORY);
+        File snmp = new File(getRrdDirectory(), ResourceTypeUtils.SNMP_DIRECTORY);
         File domainDir = new File(snmp, domain);
 
         if (!domainDir.exists() || !domainDir.isDirectory()) {

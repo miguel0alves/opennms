@@ -40,6 +40,7 @@ import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.LazySet;
 import org.opennms.netmgt.dao.api.LocationMonitorDao;
 import org.opennms.netmgt.dao.api.ResourceDao;
+import org.opennms.netmgt.dao.util.ResourceResolver;
 import org.opennms.netmgt.model.LocationMonitorIpInterface;
 import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
@@ -60,17 +61,17 @@ public class DistributedStatusResourceType implements OnmsResourceType {
     /** Constant <code>DISTRIBUTED_DIRECTORY="distributed"</code> */
     public static final String DISTRIBUTED_DIRECTORY = "distributed";
     
-    private ResourceDao m_resourceDao;
-    private LocationMonitorDao m_locationMonitorDao;
-    
+    private final ResourceResolver m_resourceResolver;
+    private final LocationMonitorDao m_locationMonitorDao;
+
     /**
      * <p>Constructor for DistributedStatusResourceType.</p>
      *
      * @param resourceDao a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      * @param locationMonitorDao a {@link org.opennms.netmgt.dao.api.LocationMonitorDao} object.
      */
-    public DistributedStatusResourceType(ResourceDao resourceDao, LocationMonitorDao locationMonitorDao) {
-        m_resourceDao = resourceDao;
+    public DistributedStatusResourceType(ResourceResolver resourceResolver, LocationMonitorDao locationMonitorDao) {
+        m_resourceResolver = resourceResolver;
         m_locationMonitorDao = locationMonitorDao;
     }
 
@@ -114,11 +115,11 @@ public class DistributedStatusResourceType implements OnmsResourceType {
             final OnmsIpInterface ipInterface = status.getIpInterface();
 			String ipAddr = InetAddressUtils.str(ipInterface.getIpAddress());
             
-            File iface = getInterfaceDirectory(id, ipAddr);
-            
-            if (iface.isDirectory()) {
-                resources.add(createResource(definitionName, id, ipAddr));
-            }
+			if (m_resourceResolver.exists(ResourceTypeUtils.RESPONSE_DIRECTORY,
+			        DISTRIBUTED_DIRECTORY, Integer.toString(id), ipAddr)) {
+			    resources.add(createResource(definitionName, id, ipAddr));
+			    
+			}
         }
         
         return OnmsResource.sortIntoResourceList(resources);
@@ -158,8 +159,9 @@ public class DistributedStatusResourceType implements OnmsResourceType {
          */
         File locationMonitorDirectory;
         try {
-            locationMonitorDirectory =
-                getLocationMonitorDirectory(locationMonitorId, true);
+            // FIXME
+            locationMonitorDirectory = new File("" + locationMonitorId);
+            //getLocationMonitorDirectory(locationMonitorId, true);
         } catch (DataAccessException e) {
             throw new ObjectRetrievalFailureException("The '" + getName() + "' resource type does not exist on this location Monitor.  Nested exception is: " + e.getClass().getName() + ": " + e.getMessage(), e);
         }
@@ -274,9 +276,9 @@ public class DistributedStatusResourceType implements OnmsResourceType {
      * @param ipAddr a {@link java.lang.String} object.
      * @return a {@link java.io.File} object.
      */
-    public File getInterfaceDirectory(int id, String ipAddr) {
-        return new File(m_resourceDao.getRrdDirectory(), getRelativeInterfacePath(id, ipAddr));
-    }
+    //public File getInterfaceDirectory(int id, String ipAddr) {
+    //    return new File(m_resourceDao.getRrdDirectory(), getRelativeInterfacePath(id, ipAddr));
+    //}
     
     /**
      * <p>getRelativeInterfacePath</p>
@@ -285,14 +287,15 @@ public class DistributedStatusResourceType implements OnmsResourceType {
      * @param ipAddr a {@link java.lang.String} object.
      * @return a {@link java.lang.String} object.
      */
-    public String getRelativeInterfacePath(int id, String ipAddr) {
+    /*public String getRelativeInterfacePath(int id, String ipAddr) {
         return ResourceTypeUtils.RESPONSE_DIRECTORY
             + File.separator + DISTRIBUTED_DIRECTORY
             + File.separator + Integer.toString(id)
             + File.separator + ipAddr;
-    }
+    }*/
 
 
+    /*
     private File getLocationMonitorDirectory(int locationMonitorId, boolean verify) throws ObjectRetrievalFailureException {
         return getLocationMonitorDirectory(Integer.toString(locationMonitorId), verify);
     }
@@ -306,6 +309,7 @@ public class DistributedStatusResourceType implements OnmsResourceType {
         
         return locationMonitorDirectory;
     }
+    */
     
     public class AttributeLoader implements LazySet.Loader<OnmsAttribute> {
         private String m_definitionName;
@@ -321,8 +325,10 @@ public class DistributedStatusResourceType implements OnmsResourceType {
         @Override
         public Set<OnmsAttribute> load() {
             LOG.debug("lazy-loading attributes for distributed status resource {}-{}/{}", m_definitionName, m_locationMonitorId, m_intf);
-            
-            return ResourceTypeUtils.getAttributesAtRelativePath(m_resourceDao.getRrdDirectory(), getRelativeInterfacePath(m_locationMonitorId, m_intf));
+
+            return Collections.emptySet();
+            // FIXME
+            //return ResourceTypeUtils.getAttributesAtRelativePath(m_resourceDao.getRrdDirectory(), getRelativeInterfacePath(m_locationMonitorId, m_intf));
         }
     }
 

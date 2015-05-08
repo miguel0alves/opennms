@@ -114,7 +114,8 @@ public class DefaultRrdGraphService implements RrdGraphService, InitializingBean
 
     private InputStream getInputStreamForCommand(String command) {
         boolean debug = true;
-        File workDir = m_resourceDao.getRrdDirectory(true);
+        // FIXME: m_resourceDao
+        File workDir = new File("/tmp");
 
         InputStream tempIn = null;
         try {
@@ -165,10 +166,14 @@ public class DefaultRrdGraphService implements RrdGraphService, InitializingBean
         PrefabGraph prefabGraph = m_graphDao.getPrefabGraph(report);
 
         Graph graph = new Graph(prefabGraph, r, new Date(start), new Date(end));
+        
+       // FIXME: m_resourceDao
+        File workDir = new File("/tmp");
+        
 
         String command = createPrefabCommand(graph,
                                              t.getCommandPrefix(),
-                                             m_resourceDao.getRrdDirectory(true),
+                                             workDir,
                                              report,
                                              width,
                                              height);

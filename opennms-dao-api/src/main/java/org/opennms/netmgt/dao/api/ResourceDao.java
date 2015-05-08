@@ -48,7 +48,7 @@ public interface ResourceDao {
      *
      * @return a {@link java.io.File} object.
      */
-    public File getRrdDirectory();
+    //public File getRrdDirectory();
     
     /**
      * <p>getRrdDirectory</p>
@@ -56,7 +56,7 @@ public interface ResourceDao {
      * @param verify a boolean.
      * @return a {@link java.io.File} object.
      */
-    public File getRrdDirectory(boolean verify);
+    //public File getRrdDirectory(boolean verify);
 
     /**
      * <p>getResourceTypes</p>

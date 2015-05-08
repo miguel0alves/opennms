@@ -37,7 +37,7 @@ import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.LazySet;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.NodeDao;
-import org.opennms.netmgt.dao.util.ResourcePathResolver;
+import org.opennms.netmgt.dao.util.ResourceResolver;
 import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
@@ -55,19 +55,19 @@ public class ResponseTimeResourceType implements OnmsResourceType {
     
     private static final Logger LOG = LoggerFactory.getLogger(ResponseTimeResourceType.class);
 
+    private final ResourceResolver m_resourceResolver;
     private final NodeDao m_nodeDao;
     private final IpInterfaceDao m_ipInterfaceDao;
-    private final ResourcePathResolver m_resourceResolver;
-
+    
     /**
      * <p>Constructor for ResponseTimeResourceType.</p>
      *
      * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
      */
-    public ResponseTimeResourceType(final NodeDao nodeDao, final IpInterfaceDao ipInterfaceDao, final ResourcePathResolver resourceResolver) {
+    public ResponseTimeResourceType(final ResourceResolver resourceResolver, final NodeDao nodeDao, final IpInterfaceDao ipInterfaceDao) {
+        m_resourceResolver = resourceResolver;
         m_nodeDao = nodeDao;
         m_ipInterfaceDao = ipInterfaceDao;
-        m_resourceResolver = resourceResolver;
     }
 
     /**
@@ -134,13 +134,7 @@ public class ResponseTimeResourceType implements OnmsResourceType {
         resource.setParent(parent);
         return resource;
     }
-    
-    /*
-    private String getRelativeInterfacePath(final String ipAddr) {
-        return ResourceTypeUtils.RESPONSE_DIRECTORY + File.separator + ipAddr;
-    }
-    */
-    
+
     private OnmsResource createResource(final OnmsIpInterface ipInterface) {
     	final String ipAddr = InetAddressUtils.str(ipInterface.getIpAddress());
     	final String label = ipAddr;
@@ -166,10 +160,10 @@ public class ResponseTimeResourceType implements OnmsResourceType {
     }
 
     public static class AttributeLoader implements LazySet.Loader<OnmsAttribute> {
-        private final ResourcePathResolver m_resourceResolver;
+        private final ResourceResolver m_resourceResolver;
         private final String m_ipAddr;
 
-        public AttributeLoader(final ResourcePathResolver resourceResolver, final String ipAddr) {
+        public AttributeLoader(final ResourceResolver resourceResolver, final String ipAddr) {
             m_resourceResolver = resourceResolver;
             m_ipAddr = ipAddr;
         }

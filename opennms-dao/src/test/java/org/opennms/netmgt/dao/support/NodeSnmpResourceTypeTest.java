@@ -56,10 +56,10 @@ public class NodeSnmpResourceTypeTest {
         expect(parent.getEntity()).andReturn(node);
         replay(parent, node);
 
-        final DefaultResourceDao resourceDao = new DefaultResourceDao();
-        resourceDao.setRrdDirectory(tempFolder.getRoot());
+        final FilesystemResourceResolver resourceResolver = new FilesystemResourceResolver();
+        resourceResolver.setRrdDirectory(tempFolder.getRoot());
 
-        final NodeSnmpResourceType nodeSnmpResourceType = new NodeSnmpResourceType(resourceDao);
+        final NodeSnmpResourceType nodeSnmpResourceType = new NodeSnmpResourceType(resourceResolver);
         
         final OnmsResource resource = nodeSnmpResourceType.getChildByName(parent, new String(""));
         assertEquals("node[1].nodeSnmp[]", resource.getId());

@@ -70,6 +70,7 @@ public class FindTopLevelResourcesTest {
     private CollectdConfigFactory m_collectdConfig;
     private DataCollectionConfigDao m_dataCollectionConfigDao;
     private DefaultResourceDao m_resourceDao;
+    private FilesystemResourceResolver m_fsResourceResolver;
 
     private FileAnticipator m_fileAnticipator;
 
@@ -94,11 +95,14 @@ public class FindTopLevelResourcesTest {
         m_collectdConfig = new CollectdConfigFactory(stream, "localhost", false);
         m_easyMockUtils.verifyAll();
 
+        m_fsResourceResolver = new FilesystemResourceResolver();
+        m_fsResourceResolver.setRrdDirectory(m_fileAnticipator.getTempDir());
+        
         m_resourceDao = new DefaultResourceDao();
         m_resourceDao.setNodeDao(m_nodeDao);
         m_resourceDao.setLocationMonitorDao(m_locationMonitorDao);
         m_resourceDao.setCollectdConfig(m_collectdConfig);
-        m_resourceDao.setRrdDirectory(m_fileAnticipator.getTempDir());
+        m_resourceDao.setResourceResolver(m_fsResourceResolver);
         m_resourceDao.setDataCollectionConfigDao(m_dataCollectionConfigDao);
 
         RrdUtils.setStrategy(new JRobinRrdStrategy());

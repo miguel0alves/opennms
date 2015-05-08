@@ -22,12 +22,30 @@ public class NewtsResourcePathResolverTest {
         EasyMock.expect(searcher.search(EasyMock.anyObject())).andReturn(searchResults);
         EasyMock.replay(searcher);
 
-        NewtsResourcePathResolver npr = new NewtsResourcePathResolver();
+        NewtsResourceResolver npr = new NewtsResourceResolver();
         npr.setSearcher(searcher);
         
         Set<String> nodeSourceDirectories = npr.findNodeSourceDirectories();
         
         EasyMock.verify(searcher);
         assertTrue(nodeSourceDirectories.contains("a:1"));
+    }
+    
+    @Test
+    public void canList() {
+        SearchResults searchResults = new SearchResults();
+        searchResults.addResult(new Resource("snmp:fs:a:1:group:abc"), Collections.emptyList());
+
+        CassandraSearcher searcher = EasyMock.createNiceMock(CassandraSearcher.class);
+        EasyMock.expect(searcher.search(EasyMock.anyObject())).andReturn(searchResults);
+        EasyMock.replay(searcher);
+
+        NewtsResourceResolver npr = new NewtsResourceResolver();
+        npr.setSearcher(searcher);
+        
+        Set<String> matches = npr.list("snmp", "fs", "a", "1");
+
+        EasyMock.verify(searcher);
+        assertTrue(matches.contains("group"));
     }
 }

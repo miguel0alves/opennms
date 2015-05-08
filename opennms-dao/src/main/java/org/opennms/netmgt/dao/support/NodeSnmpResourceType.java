@@ -28,33 +28,31 @@
 
 package org.opennms.netmgt.dao.support;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.opennms.netmgt.dao.api.ResourceDao;
+import org.opennms.netmgt.dao.util.ResourceResolver;
 import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.OnmsResourceType;
 import org.opennms.netmgt.model.ResourceTypeUtils;
-import org.opennms.netmgt.rrd.RrdFileConstants;
 import org.springframework.orm.ObjectRetrievalFailureException;
 
 import com.google.common.collect.Lists;
 
 public class NodeSnmpResourceType implements OnmsResourceType {
 
-    private ResourceDao m_resourceDao;
+    private final ResourceResolver m_resourceResolver;
 
     /**
      * <p>Constructor for NodeSnmpResourceType.</p>
      *
      * @param resourceDao a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      */
-    public NodeSnmpResourceType(ResourceDao resourceDao) {
-        m_resourceDao = resourceDao;
+    public NodeSnmpResourceType(ResourceResolver resourceResolver) {
+        m_resourceResolver = resourceResolver;
     }
 
     /**
@@ -70,37 +68,26 @@ public class NodeSnmpResourceType implements OnmsResourceType {
     /**
      * <p>getLabel</p>
      *
-     * @return a {@link java.lang.String} object.
+     * @return a {@link java.lang.String}        
+        
+        File nodeSnmpDir = new File(m_resourceDao.getRrdDirectory(), ResourceTypeUtils.SNMP_DIRECTORY + File.separator
+                       + ResourceTypeUtils.getRelativeNodeSourceDirectory(nodeSource).toString());
+        if (!nodeSnmpDir.isDirectory()) { // A node without performance metrics should not have a directory 
+            return false;
+        }
+         object.
      */
     @Override
     public String getLabel() {
         return "SNMP Node Data";
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isResourceTypeOnNode(int nodeId) {
-        return getResourceDirectory(nodeId, false).isDirectory();
+        return m_resourceResolver.exists(ResourceTypeUtils.SNMP_DIRECTORY, Integer.toString(nodeId));
     }
-    
-    /**
-     * <p>getResourceDirectory</p>
-     *
-     * @param nodeId a int.
-     * @param verify a boolean.
-     * @return a {@link java.io.File} object.
-     */
-    public File getResourceDirectory(int nodeId, boolean verify) {
-        File snmp = new File(m_resourceDao.getRrdDirectory(verify), ResourceTypeUtils.SNMP_DIRECTORY);
-        
-        File node = new File(snmp, Integer.toString(nodeId));
-        if (verify && !node.isDirectory()) {
-            throw new ObjectRetrievalFailureException(File.class, "No node directory exists for node " + nodeId + ": " + node);
-        }
-        
-        return node;
-    }
-    
+
     /** {@inheritDoc} */
     @Override
     public List<OnmsResource> getResourcesForNode(int nodeId) {
@@ -131,20 +118,15 @@ public class NodeSnmpResourceType implements OnmsResourceType {
     }
 
     private OnmsResource getResourceForNode(String nodeId) {
-        final Set<OnmsAttribute> attributes = ResourceTypeUtils.getAttributesAtRelativePath(m_resourceDao.getRrdDirectory(), getRelativePathForResource(nodeId));
+        final Set<OnmsAttribute> attributes = m_resourceResolver.getAttributes(ResourceTypeUtils.SNMP_DIRECTORY, nodeId);
 
         return new OnmsResource("", "Node-level Performance Data", this, attributes);
     }
 
     private OnmsResource getResourceForNodeSource(String nodeSource) {
-        final File relPath = new File(ResourceTypeUtils.SNMP_DIRECTORY, ResourceTypeUtils.getRelativeNodeSourceDirectory(nodeSource).toString());
-        final Set<OnmsAttribute> attributes = ResourceTypeUtils.getAttributesAtRelativePath(m_resourceDao.getRrdDirectory(), relPath.toString());
+        final Set<OnmsAttribute> attributes = m_resourceResolver.getAttributes(ResourceTypeUtils.SNMP_DIRECTORY, ResourceTypeUtils.getRelativeNodeSourcePathComponents(nodeSource));
 
         return new OnmsResource("", "Node-level Performance Data", this, attributes);
-    }
-
-    private String getRelativePathForResource(String nodeId) {
-        return ResourceTypeUtils.SNMP_DIRECTORY + File.separator + nodeId;
     }
 
     /**
@@ -173,12 +155,8 @@ public class NodeSnmpResourceType implements OnmsResourceType {
     /** {@inheritDoc} */
     @Override
     public boolean isResourceTypeOnNodeSource(String nodeSource, int nodeId) {
-        File nodeSnmpDir = new File(m_resourceDao.getRrdDirectory(), ResourceTypeUtils.SNMP_DIRECTORY + File.separator
-                       + ResourceTypeUtils.getRelativeNodeSourceDirectory(nodeSource).toString());
-        if (!nodeSnmpDir.isDirectory()) { // A node without performance metrics should not have a directory 
-            return false;
-        }
-        return nodeSnmpDir.listFiles(RrdFileConstants.RRD_FILENAME_FILTER).length > 0; 
+        // FIXME: return nodeSnmpDir.listFiles(RrdFileConstants.RRD_FILENAME_FILTER).length > 0; 
+        return m_resourceResolver.exists(ResourceTypeUtils.SNMP_DIRECTORY, ResourceTypeUtils.getRelativeNodeSourcePathComponents(nodeSource));
     }
     
     /** {@inheritDoc} */

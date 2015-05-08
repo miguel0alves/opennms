@@ -28,6 +28,7 @@
 
 package org.opennms.nrtg.web.internal;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -322,7 +323,9 @@ public class NrtController {
             final String rrdRelativePath = attr.getRrdRelativePath();
             final String rrdName = rrdRelativePath.substring(0, rrdRelativePath.lastIndexOf('.'));
 
-            final Set<Entry<String, String>> metaDataEntrySet = RrdUtils.readMetaDataFile(m_resourceDao.getRrdDirectory().getPath(), rrdName).entrySet();
+            // FIXME
+            File rrdDir = new File("/tmp");
+            final Set<Entry<String, String>> metaDataEntrySet = RrdUtils.readMetaDataFile(rrdDir.getPath(), rrdName).entrySet();
             if (metaDataEntrySet == null) continue;
 
             final String attrName = attr.getName();

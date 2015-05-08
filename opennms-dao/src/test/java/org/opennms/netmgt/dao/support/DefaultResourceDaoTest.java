@@ -77,7 +77,7 @@ public class DefaultResourceDaoTest extends TestCase {
     private DataCollectionConfigDao m_dataCollectionConfigDao;
     private DefaultResourceDao m_resourceDao;
     private IpInterfaceDao m_ipInterfaceDao;
-    private FilesystemResourcePathResolver m_fsResourceResolver;
+    private FilesystemResourceResolver m_fsResourceResolver;
 
     private FileAnticipator m_fileAnticipator;
 
@@ -109,11 +109,11 @@ public class DefaultResourceDaoTest extends TestCase {
         m_resourceDao.setLocationMonitorDao(m_locationMonitorDao);
         m_resourceDao.setIpInterfaceDao(m_ipInterfaceDao);
         m_resourceDao.setCollectdConfig(m_collectdConfig);
-        m_resourceDao.setRrdDirectory(m_fileAnticipator.getTempDir());
+        //m_resourceDao.setRrdDirectory(m_fileAnticipator.getTempDir());
         m_resourceDao.setDataCollectionConfigDao(m_dataCollectionConfigDao);
         m_resourceDao.setDataCollectionConfigDao(m_dataCollectionConfigDao);
 
-        m_fsResourceResolver = new FilesystemResourcePathResolver();
+        m_fsResourceResolver = new FilesystemResourceResolver();
         m_fsResourceResolver.setRrdDirectory(m_fileAnticipator.getTempDir());
         m_resourceDao.setResourceResolver(m_fsResourceResolver);
 
