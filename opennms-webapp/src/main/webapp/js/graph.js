@@ -59,7 +59,7 @@
             'end': end
           };
 
-          var zoomUrl = window.onmsGraphs.relativeRequestPath + '?' + $.param(zoomUrlParams);
+          var zoomUrl = window.onmsGraphs.baseHref + 'graph/results.htm?' + $.param(zoomUrlParams);
           graphDom = '<a href="' + zoomUrl + '">' + graphDom + '</a>';
         }
 

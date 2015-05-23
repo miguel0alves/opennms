@@ -47,6 +47,7 @@
     <c:param name="breadcrumb" value="Results" />
     <c:param name="scrollSpy" value="#results-sidebar" />
     <c:param name="meta"       value="<meta http-equiv='X-UA-Compatible' content='IE=Edge' />"/>
+    <c:param name="renderGraphs" value="true" />
 </c:import>
 
 <div id="graph-results">

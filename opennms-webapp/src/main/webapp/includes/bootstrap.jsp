@@ -111,14 +111,16 @@
       <script type="text/javascript" src='<%= baseHref %>resources/spring/Spring-Dojo.js'></script>
     </c:if>
 
-  <!-- Graphing -->
-  <script type="text/javascript">
-    // Global scope
-    window.onmsGraphs = {'static': <%= Boolean.getBoolean("org.opennms.web.graphs.static") %>};
-    window.onmsGraphs.relativeRequestPath = "${requestScope.relativeRequestPath}";
-  </script>
-  <script type="text/javascript" src="<%= baseHref %>js/graph.js"></script>
-  <script src="<%= baseHref %>js/holder.min.js"></script>
+    <c:if test="${param.renderGraphs == 'true'}">
+      <!-- Graphing -->
+      <script type="text/javascript">
+        // Global scope
+        window.onmsGraphs = {'static': <%= Boolean.getBoolean("org.opennms.web.graphs.static") %>};
+        window.onmsGraphs.baseHref = "<%= baseHref %>";
+      </script>
+      <script type="text/javascript" src="<%= baseHref %>js/graph.js"></script>
+      <script src="<%= baseHref %>js/holder.min.js"></script>
+    </c:if>
 
 <c:forEach var="script" items="${paramValues.script}">
     <c:out value="${script}" escapeXml="false" />
