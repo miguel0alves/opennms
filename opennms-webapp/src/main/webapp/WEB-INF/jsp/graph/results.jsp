@@ -49,12 +49,6 @@
     <c:param name="meta"       value="<meta http-equiv='X-UA-Compatible' content='IE=Edge' />"/>
 </c:import>
 
-<%
-   Boolean useStaticGraphs = Boolean.getBoolean("org.opennms.web.graphs.static");
-%>
-
-<script src="js/holder.min.js"></script>
-
 <div id="graph-results">
 
 <div class="row">
@@ -219,7 +213,7 @@
 		                        </c:if>
 		                    </c:if>
 	                    </div> <!-- graph-aux-controls -->
-	                    <div class="graph" style="margin-left: auto; margin-right: auto;" data-resource-id="${resultSet.resource.id}" data-graph-name="${graph.name}" data-graph-title="${graph.title}"></div>
+	                    <div class="dynamic-graph" data-graph-zoomable="true" data-resource-id="${resultSet.resource.id}" data-graph-name="${graph.name}" data-graph-title="${graph.title}" data-graph-start="${results.start.time}" data-graph-end="${results.end.time}" data-graph-zooming="${param.zoom}"></div>
                     </div>
                     <br/><br/>
                 </c:forEach>
@@ -256,87 +250,6 @@
 
 </div> <!-- row -->
 </div> <!-- graph-results -->
-
-<script type="text/javascript">
-var $j = jQuery.noConflict(); // avoid conflicts with prototype.js
-$j(function($) {
-    var useStaticGraphs = <%= useStaticGraphs %>;
-    var start = "${results.start.time}";
-    var end = "${results.end.time}";
-    var width, height;
-
-    if (useStaticGraphs) {
-        var isZooming = "${param.zoom}" == "true";
-	    var relativeRequestPath = "${requestScope.relativeRequestPath}";
-
-	    $(".graph").each(function(index) {
-	        var resourceId = $(this).data("resource-id");
-	        var graphName = $(this).data("graph-name");
-	        var graphTitle = $(this).data("graph-title");
-
-	        width = Math.round($(this).width() * 0.8);
-	        height = Math.round(width * 0.3);
-
-	        var graphUrlParams = {
-	            'resourceId': $(this).data("resource-id"),
-	            'report': $(this).data("graph-name"),
-	            'start': start,
-	            'end': end,
-	            'width': width,
-	            'height': height
-	        };
-	        var graphUrl = "graph/graph.png?" + $.param(graphUrlParams);
-
-	        var altSuffix;
-	        var imgTagAttrs = "";
-	        if (isZooming) {
-	            altSuffix = ' (drag to zoom)';
-	            imgTagAttrs = 'id="zoomImage"';
-	        } else {
-	            altSuffix = ' (click to zoom)';
-	        }
-
-	        var graphDom = '<img ' + imgTagAttrs + ' class="graphImg" src="' + graphUrl + '" alt="Resource graph: ' + graphTitle + altSuffix + '" />';
-	        if (!isZooming) {
-	            var zoomUrlParams = {
-	                'zoom': true,
-	                'relativetime': 'custom',
-	                'resourceId': $(this).data("resource-id"),
-	                'reports': $(this).data("graph-name"),
-	                'start': start,
-	                'end': end
-	            };
-
-	            var zoomUrl = relativeRequestPath + '?' + $.param(zoomUrlParams);
-	            graphDom = '<a href="' + zoomUrl + '">' + graphDom + '</a>';
-	        }
-
-	        $(this).append(graphDom);
-	    });
-
-	    if (isZooming) {
-	        var img = $("#zoomImage");
-	        img.width(width);
-	        img.height(height);
-	    }
-    } else {
-        $(".graph").each(function(index) {
-            var resourceId = $(this).data("resource-id");
-            var graphName = $(this).data("graph-name");
-            var graphTitle = $(this).data("graph-title");
-
-            width = Math.round($(this).width() * 0.8);
-            height = Math.round(width * 0.3);
-
-            $(this).append('<img class="graph-placeholder" data-src="holder.js/' + width + 'x' + height + '?text=' + graphTitle + '">');
-        });
-        Holder.run({images:".graph-placeholder"});
-    }
-
-    $(document).trigger("graphsLoaded", [width, height]);
-});
-</script>
-
 
 <c:url var="relativeTimeReloadUrl" value="${requestScope.relativeRequestPath}">
     <c:forEach var="resultSet" items="${results.graphResultSets}">
@@ -405,6 +318,7 @@ $j(function($) {
 
     <script type="text/javascript">
     var myCropper; // zoom.js expects this global
+    var $j = jQuery.noConflict(); // Avoid conflicts with prototype.js used by graph/cropper/zoom.js
     $j(document).on("graphsLoaded", {}, function(event, width, height) {
         myCropper = new Cropper.Img(
             'zoomImage',
