@@ -1,7 +1,60 @@
 /**
  * Detects and populates graph <div>s.
  */
-(function () {
+
+DynamicGraph = (function () {
+  "use strict";
+
+  var $j = jQuery.noConflict(); // Avoid conflicts with prototype.js used by graph/cropper/zoom.js
+
+  var drawStaticGraph = function(el, def, dim) {
+    var graphUrlParams = {
+      'resourceId': def.resourceId,
+      'report': def.graphName,
+      'start': def.start,
+      'end': def.end,
+      'width': dim.width,
+      'height': dim.height
+    };
+    var graphUrl = window.onmsGraphs.baseHref + "graph/graph.png?" + $j.param(graphUrlParams);
+
+    var altSuffix;
+    var imgTagAttrs = "";
+    if (def.zooming) {
+      altSuffix = ' (drag to zoom)';
+      imgTagAttrs = 'id="zoomImage"';
+    } else {
+      altSuffix = ' (click to zoom)';
+    }
+
+    var graphDom = '<img ' + imgTagAttrs + ' class="graphImg" src="' + graphUrl + '" alt="Resource graph: ' + def.graphTitle + altSuffix + '" />';
+    if (def.zoomable && !def.zooming) {
+      var zoomUrlParams = {
+        'zoom': true,
+        'relativetime': 'custom',
+        'resourceId': def.resourceId,
+        'reports': def.graphName,
+        'start': def.start,
+        'end': def.end
+      };
+
+      var zoomUrl = window.onmsGraphs.baseHref + 'graph/results.htm?' + $j.param(zoomUrlParams);
+      graphDom = '<a href="' + zoomUrl + '">' + graphDom + '</a>';
+    }
+
+    el.html(graphDom);
+
+    if (def.zooming) {
+      // There can only be a single image on the page
+      var img = $j("#zoomImage");
+      img.width(dim.width);
+      img.height(dim.height);
+    }
+  };
+
+  var drawInteractiveGraph = function(el, def, dim) {
+    el.html('<img class="graph-placeholder" data-src="holder.js/' + dim.width + 'x' + dim.height + '?text=' + def.graphTitle + '">');
+  };
 
   var getDimensionsForElement = function(el) {
     var width = Math.round(el.width() * 0.8);
@@ -11,82 +64,59 @@
     };
   };
 
-  var $j = jQuery.noConflict(); // Avoid conflicts with prototype.js used by graph/cropper/zoom.js
-  $j(function ($) {
-    // Keep track of the last width and height, since we'll send these in our graphsLoaded event
-    // The values are used by the image cropper i.e. zoom functionality
-    var dimensions = {'width': 0, 'height': 0};
+  var run = function () {
+    var didDrawOneOrMoreInteractiveGraphs = false;
 
-    if (window.onmsGraphs.static) {
-      $(".dynamic-graph").each(function (index) {
-        var resourceId = $(this).data("resource-id");
-        var graphName = $(this).data("graph-name");
-        var graphTitle = $(this).data("graph-title");
-        var start = $(this).data("graph-start");
-        var end = $(this).data("graph-end");
-        var zooming = $(this).data("graph-zooming");
-        var zoomable = $(this).data("graph-zoomable");
+    $j(".dynamic-graph").each(function () {
+      // Grab the element
+      var el = $j(this);
 
-        dimensions = getDimensionsForElement($(this));
+      // Extract the attributes
+      var def = {
+        'resourceId': el.data("resource-id"),
+        'graphName': el.data("graph-name"),
+        'graphTitle': el.data("graph-title"),
+        'start': el.data("graph-start"),
+        'end': el.data("graph-end"),
+        'zooming': el.data("graph-zooming"),
+        'zoomable': el.data("graph-zoomable")
+      };
 
-        var graphUrlParams = {
-          'resourceId': resourceId,
-          'report': graphName,
-          'start': start,
-          'end': end,
-          'width': dimensions.width,
-          'height': dimensions.height
-        };
-        var graphUrl = "graph/graph.png?" + $.param(graphUrlParams);
+      // Use sane defaults
+      if (def.end === undefined || def.end === null) {
+        def.end = new Date().getTime();
+      }
+      if (def.start === undefined || def.start === null) {
+        def.start = def.end - (24 * 60 * 60 * 1000); // 24 hours ago.
+      }
 
-        var altSuffix;
-        var imgTagAttrs = "";
-        if (zooming) {
-          altSuffix = ' (drag to zoom)';
-          imgTagAttrs = 'id="zoomImage"';
-        } else {
-          altSuffix = ' (click to zoom)';
-        }
+      // Determine the target dimensions
+      var dim = getDimensionsForElement(el);
 
-        var graphDom = '<img ' + imgTagAttrs + ' class="graphImg" src="' + graphUrl + '" alt="Resource graph: ' + graphTitle + altSuffix + '" />';
-        if (zoomable && !zooming) {
-          var zoomUrlParams = {
-            'zoom': true,
-            'relativetime': 'custom',
-            'resourceId': resourceId,
-            'reports': graphName,
-            'start': start,
-            'end': end
-          };
+      // Render the appropriate graph
+      var drawStaticGraphs = (window.onmsGraphs != undefined && window.onmsGraphs.static);
+      if (drawStaticGraphs) {
+        drawStaticGraph(el, def, dim);
+      } else {
+        drawInteractiveGraph(el, def, dim);
+        didDrawOneOrMoreInteractiveGraphs = true;
+      }
 
-          var zoomUrl = window.onmsGraphs.baseHref + 'graph/results.htm?' + $.param(zoomUrlParams);
-          graphDom = '<a href="' + zoomUrl + '">' + graphDom + '</a>';
-        }
+      // Notify other components (i.e cropper) that we have loaded a graph
+      $j(document).trigger("graphLoaded", [dim.width, dim.height]);
+    });
 
-        $(this).append(graphDom);
-
-        if (zooming) {
-          // There can only be a single image on the page
-          var img = $("#zoomImage");
-          img.width(dimensions.width);
-          img.height(dimensions.height);
-        }
-      });
-    } else {
-      $(".dynamic-graph").each(function (index) {
-        var resourceId = $(this).data("resource-id");
-        var graphName = $(this).data("graph-name");
-        var graphTitle = $(this).data("graph-title");
-        var start = $(this).data("graph-start");
-        var end = $(this).data("graph-end");
-
-        dimensions = getDimensionsForElement($(this));
-
-        $(this).append('<img class="graph-placeholder" data-src="holder.js/' + dimensions.width + 'x' + dimensions.height + '?text=' + graphTitle + '">');
-      });
+    if (didDrawOneOrMoreInteractiveGraphs) {
       Holder.run({images: ".graph-placeholder"});
     }
+  };
 
-    $(document).trigger("graphsLoaded", [dimensions.width, dimensions.height]);
+  // Automatically trigger a run on load
+  $j(function () {
+    run();
   });
+
+  return {
+    run: run
+  }
 })();

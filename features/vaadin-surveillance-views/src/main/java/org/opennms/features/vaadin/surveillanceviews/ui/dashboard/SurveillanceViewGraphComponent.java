@@ -30,17 +30,14 @@ package org.opennms.features.vaadin.surveillanceviews.ui.dashboard;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.vaadin.data.Property;
-import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Image;
 import com.vaadin.ui.JavaScript;
-import com.vaadin.ui.JavaScriptFunction;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.VerticalLayout;
-import org.json.JSONArray;
-import org.json.JSONException;
+
+import org.opennms.features.vaadin.components.graph.DynamicGraph;
 import org.opennms.features.vaadin.surveillanceviews.service.SurveillanceViewService;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsNode;
@@ -49,7 +46,9 @@ import org.opennms.netmgt.model.OnmsResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,13 +79,9 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
      */
     private NativeSelect m_nodeSelect, m_resourceSelect, m_graphSelect;
     /**
-     * the image layout
+     * the graph layout
      */
-    private VerticalLayout m_imageLayout;
-    /**
-     * initial width of image
-     */
-    private int m_width = 1000;
+    private VerticalLayout m_graphLayout;
     /**
      * the refresh future
      */
@@ -187,13 +182,9 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         m_graphSelect.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
             public void valueChange(Property.ValueChangeEvent valueChangeEvent) {
-                String string = (String) m_graphSelect.getValue();
-
-                if (string != null) {
-                    replaceImage(getSurveillanceViewService().imageUrlForGraph(string, m_width, 200));
-                } else {
-                    replaceImage(null);
-                }
+                String graphName = (String) m_graphSelect.getValue();
+                String resourceId = (String) m_resourceSelect.getValue();
+                replaceGraph(graphName, resourceId);
             }
         });
 
@@ -214,10 +205,10 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         /**
          * create layout for storing the image
          */
-        m_imageLayout = new VerticalLayout();
-        m_imageLayout.setSizeUndefined();
-        m_imageLayout.setWidth(100, Unit.PERCENTAGE);
-        m_imageLayout.setHeight(300, Unit.PIXELS);
+        m_graphLayout = new VerticalLayout();
+        m_graphLayout.setSizeUndefined();
+        m_graphLayout.setWidth(100, Unit.PERCENTAGE);
+        m_graphLayout.setHeight(300, Unit.PIXELS);
 
         /**
          * create layout for selection boxes
@@ -228,17 +219,7 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         selectionBoxesLayout.addComponent(m_resourceSelect);
         selectionBoxesLayout.addComponent(m_graphSelect);
 
-        m_imageLayout.setId("imageLayout");
-
-        /**
-         * add javascript magic to retrieve the layout width...
-         */
-        JavaScript.getCurrent().addFunction("getLayoutWidth", new JavaScriptFunction() {
-            @Override
-            public void call(final JSONArray arguments) throws JSONException {
-                m_width = arguments.getInt(0);
-            }
-        });
+        m_graphLayout.setId("graphLayout");
 
         /**
          * ...and call it when page is constructed. Also add a resize listener...
@@ -247,7 +228,7 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
             @Override
             public void attach(AttachEvent attachEvent) {
                 getUI().getPage().addBrowserWindowResizeListener(SurveillanceViewGraphComponent.this);
-                JavaScript.getCurrent().execute("getLayoutWidth(document.getElementById('" + m_imageLayout.getId() + "').clientWidth);");
+                JavaScript.getCurrent().execute("getLayoutWidth(document.getElementById('" + m_graphLayout.getId() + "').clientWidth);");
             }
         });
 
@@ -265,7 +246,7 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
          * add layout for selection boxes and image
          */
         addComponent(selectionBoxesLayout);
-        addComponent(m_imageLayout);
+        addComponent(m_graphLayout);
     }
 
     /**
@@ -273,28 +254,26 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
      */
     @Override
     public void browserWindowResized(Page.BrowserWindowResizeEvent browserWindowResizeEvent) {
-        JavaScript.getCurrent().execute("getLayoutWidth(document.getElementById('" + m_imageLayout.getId() + "').clientWidth);");
+        String graphName = (String) m_graphSelect.getValue();
+        String resourceId = (String) m_resourceSelect.getValue();
 
-        String string = (String) m_graphSelect.getValue();
-
-        if (string != null) {
-            replaceImage(getSurveillanceViewService().imageUrlForGraph(string, m_width, 200));
+        if (graphName != null && resourceId != null) {
+            replaceGraph(graphName, resourceId);
         }
     }
 
-    /**
-     * Method to replace the current image with a new one given by the url.
-     *
-     * @param url the new image url
-     */
-    private void replaceImage(String url) {
-        m_imageLayout.removeAllComponents();
+    private void replaceGraph(String graphName, String resourceId) {
+        m_graphLayout.removeAllComponents();
 
-        if (url != null) {
-            Image image = new Image(null, new ExternalResource(url));
-            image.setWidth(100, Unit.PERCENTAGE);
-
-            m_imageLayout.addComponent(image);
+        if (graphName != null && resourceId != null) {
+            final DynamicGraph graph = new DynamicGraph(graphName, resourceId);
+            // Span the last hour
+            final Calendar calendar = new GregorianCalendar();
+            graph.setEnd(calendar.getTime());
+            calendar.add(Calendar.HOUR_OF_DAY, -1);
+            graph.setStart(calendar.getTime());
+            graph.setWidth(100, Unit.PERCENTAGE);
+            m_graphLayout.addComponent(graph);
         }
     }
 

@@ -320,7 +320,7 @@
     <script type="text/javascript">
     var myCropper; // zoom.js expects this global
     var $j = jQuery.noConflict(); // Avoid conflicts with prototype.js used by graph/cropper/zoom.js
-    $j(document).on("graphsLoaded", {}, function(event, width, height) {
+    $j(document).on("graphLoaded", {}, function(event, width, height) {
         myCropper = new Cropper.Img(
             'zoomImage',
             {
