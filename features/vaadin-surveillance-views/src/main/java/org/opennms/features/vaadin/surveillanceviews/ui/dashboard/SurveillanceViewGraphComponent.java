@@ -208,7 +208,6 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         m_graphLayout = new VerticalLayout();
         m_graphLayout.setSizeUndefined();
         m_graphLayout.setWidth(100, Unit.PERCENTAGE);
-        m_graphLayout.setHeight(300, Unit.PIXELS);
 
         /**
          * create layout for selection boxes
@@ -220,17 +219,6 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         selectionBoxesLayout.addComponent(m_graphSelect);
 
         m_graphLayout.setId("graphLayout");
-
-        /**
-         * ...and call it when page is constructed. Also add a resize listener...
-         */
-        addAttachListener(new AttachListener() {
-            @Override
-            public void attach(AttachEvent attachEvent) {
-                getUI().getPage().addBrowserWindowResizeListener(SurveillanceViewGraphComponent.this);
-                JavaScript.getCurrent().execute("getLayoutWidth(document.getElementById('" + m_graphLayout.getId() + "').clientWidth);");
-            }
-        });
 
         /**
          * ... and remove the resize listener on detach event
