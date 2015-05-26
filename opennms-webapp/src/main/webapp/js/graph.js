@@ -53,6 +53,12 @@ DynamicGraph = (function () {
   };
 
   var drawInteractiveGraph = function(el, def, dim) {
+    var text = def.graphTitle;
+    // Use the dimensions if no title is set
+    if (text === undefined || text === null) {
+      text = dim.width + 'x' + dim.height;
+    }
+
     el.html('<img class="graph-placeholder" data-src="holder.js/' + dim.width + 'x' + dim.height + '?text=' + def.graphTitle + '">');
   };
 
