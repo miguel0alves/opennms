@@ -7,7 +7,10 @@ DynamicGraph = (function () {
 
   var $j = jQuery.noConflict(); // Avoid conflicts with prototype.js used by graph/cropper/zoom.js
 
-  var drawStaticGraph = function(el, def, dim) {
+  /**
+   * Renders the graph with an image tag pointed to graph/graph.png
+   */
+  var drawPngGraph = function(el, def, dim) {
     var graphUrlParams = {
       'resourceId': def.resourceId,
       'report': def.graphName,
@@ -52,14 +55,17 @@ DynamicGraph = (function () {
     }
   };
 
-  var drawInteractiveGraph = function(el, def, dim) {
+  /**
+   * Renders a placeholder using holder.js
+   */
+  var drawPlaceholderGraph = function(el, def, dim) {
     var text = def.graphTitle;
     // Use the dimensions if no title is set
     if (text === undefined || text === null) {
       text = dim.width + 'x' + dim.height;
     }
 
-    el.html('<img class="graph-placeholder" data-src="holder.js/' + dim.width + 'x' + dim.height + '?text=' + def.graphTitle + '">');
+    el.html('<img class="graph-placeholder" data-src="holder.js/' + dim.width + 'x' + dim.height + '?text=' + text + '">');
   };
 
   var getDimensionsForElement = function(el, def) {
@@ -71,7 +77,7 @@ DynamicGraph = (function () {
   };
 
   var run = function () {
-    var didDrawOneOrMoreInteractiveGraphs = false;
+    var didDrawOneOrMorePlaceholders = false;
 
     $j(".dynamic-graph").each(function () {
       // Grab the element
@@ -115,20 +121,24 @@ DynamicGraph = (function () {
       // Determine the target dimensions
       var dim = getDimensionsForElement(el, def);
 
-      // Render the appropriate graph
-      var drawStaticGraphs = (window.onmsGraphs != undefined && window.onmsGraphs.static);
-      if (drawStaticGraphs) {
-        drawStaticGraph(el, def, dim);
+      // Render the graph using the appropriate engine
+      var drawGraphUsingPlaceholder = false;
+      if (window.onmsGraphs != undefined && "placeholder" === window.onmsGraphs.engine) {
+        drawGraphUsingPlaceholder = true;
+      }
+
+      if (drawGraphUsingPlaceholder) {
+        drawPlaceholderGraph(el, def, dim);
+        didDrawOneOrMorePlaceholders = true;
       } else {
-        drawInteractiveGraph(el, def, dim);
-        didDrawOneOrMoreInteractiveGraphs = true;
+        drawPngGraph(el, def, dim);
       }
 
       // Notify other components (i.e cropper) that we have loaded a graph
       $j(document).trigger("graphLoaded", [dim.width, dim.height]);
     });
 
-    if (didDrawOneOrMoreInteractiveGraphs) {
+    if (didDrawOneOrMorePlaceholders) {
       Holder.run({images: ".graph-placeholder"});
     }
   };

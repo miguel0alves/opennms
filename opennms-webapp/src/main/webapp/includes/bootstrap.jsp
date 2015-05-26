@@ -115,8 +115,8 @@
       <!-- Graphing -->
       <script type="text/javascript">
         // Global scope
-        window.onmsGraphs = {'static': <%= Boolean.getBoolean("org.opennms.web.graphs.static") %>};
-        window.onmsGraphs.baseHref = "<%= baseHref %>";
+        window.onmsGraphs = {'engine': '<%= System.getProperty("org.opennms.web.graphs.engine") %>'};
+        window.onmsGraphs.baseHref = '<%= baseHref %>';
       </script>
       <script type="text/javascript" src="<%= baseHref %>js/graph.js"></script>
       <script src="<%= baseHref %>js/holder.min.js"></script>

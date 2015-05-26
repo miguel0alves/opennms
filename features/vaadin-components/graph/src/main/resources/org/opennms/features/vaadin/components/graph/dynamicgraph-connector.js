@@ -7,7 +7,7 @@ org_opennms_features_vaadin_components_graph_DynamicGraph = function() {
 
     window.onmsGraphs = {
         'baseHref': this.getState().baseHref,
-        'static': this.getState().useStaticGraphs
+        'engine': this.getState().engine
     };
 
     var div = document.createElement('div');

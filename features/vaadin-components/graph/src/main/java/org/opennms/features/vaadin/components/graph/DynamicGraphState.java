@@ -38,7 +38,7 @@ public class DynamicGraphState extends JavaScriptComponentState {
     private static final long serialVersionUID = -6846721022019894325L;
 
     public String baseHref = "/opennms/";
-    public Boolean useStaticGraphs = Boolean.getBoolean("org.opennms.web.graphs.static");
+    public String engine = System.getProperty("org.opennms.web.graphs.engine");
 
     public String graphName;
     public String resourceId;
