@@ -40,7 +40,7 @@ public class DynamicGraphState extends JavaScriptComponentState {
     public String baseHref = "/opennms/";
     public Boolean useStaticGraphs = Boolean.getBoolean("org.opennms.web.graphs.static");
 
-    public String name;
+    public String graphName;
     public String resourceId;
 
     public Long start;

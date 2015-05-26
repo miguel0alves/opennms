@@ -13,7 +13,7 @@ org_opennms_features_vaadin_components_graph_DynamicGraph = function() {
     var div = document.createElement('div');
     div.setAttribute('class', 'dynamic-graph');
     div.setAttribute('data-resource-id', this.getState().resourceId);
-    div.setAttribute('data-graph-name', this.getState().name);
+    div.setAttribute('data-graph-name', this.getState().graphName);
     if (this.getState().start != undefined && this.getState().start != null) {
     	div.setAttribute('data-graph-start', this.getState().start);
     }
@@ -25,6 +25,9 @@ org_opennms_features_vaadin_components_graph_DynamicGraph = function() {
     }
     if (this.getState().heightRatio != undefined && this.getState().heightRatio != null) {
     	div.setAttribute('data-height-ratio', this.getState().heightRatio);
+    }
+    if (this.getState().title != undefined && this.getState().title != null) {
+    	div.setAttribute('data-graph-title', this.getState().title);
     }
 
     e.appendChild(div);

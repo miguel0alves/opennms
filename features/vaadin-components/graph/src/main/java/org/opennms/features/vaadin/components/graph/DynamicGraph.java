@@ -30,6 +30,7 @@ package org.opennms.features.vaadin.components.graph;
 import java.util.Date;
 
 import com.vaadin.annotations.JavaScript;
+import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.AbstractJavaScriptComponent;
 
 /**
@@ -55,10 +56,12 @@ import com.vaadin.ui.AbstractJavaScriptComponent;
 public class DynamicGraph extends AbstractJavaScriptComponent {
     private static final long serialVersionUID = 3363043899957566308L;
 
-    public DynamicGraph(final String name, final String resourceId) {
+    public DynamicGraph(final String graphName, final String resourceId) {
         final DynamicGraphState state = getState();
-        state.name = name;
+        state.graphName = graphName;
         state.resourceId = resourceId;
+
+        setWidth(100, Unit.PERCENTAGE);
     }
 
     public void setBaseHref(String baseHref) {
@@ -79,6 +82,10 @@ public class DynamicGraph extends AbstractJavaScriptComponent {
 
     public void setHeightRatio(Double heightRatio) {
         getState().heightRatio = heightRatio;
+    }
+
+    public void setTitle(String title) {
+        getState().title = title;
     }
 
     @Override

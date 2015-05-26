@@ -203,7 +203,7 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         m_graphSelect.addStyleName("surveillance-view");
 
         /**
-         * create layout for storing the image
+         * create layout for storing the graph
          */
         m_graphLayout = new VerticalLayout();
         m_graphLayout.setSizeUndefined();
@@ -262,7 +262,6 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
             graph.setStart(calendar.getTime());
             // Use all of the available width
             graph.setWidthRatio(1.0d);
-            graph.setWidth(100, Unit.PERCENTAGE);
             // Use a smaller height ratio
             graph.setHeightRatio(0.2d);
             m_graphLayout.addComponent(graph);
