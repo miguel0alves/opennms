@@ -260,6 +260,8 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
             graph.setEnd(calendar.getTime());
             calendar.add(Calendar.HOUR_OF_DAY, -1);
             graph.setStart(calendar.getTime());
+            // Use all of the available width
+            graph.setWidthRatio(1.0d);
             graph.setWidth(100, Unit.PERCENTAGE);
             m_graphLayout.addComponent(graph);
         }

@@ -20,6 +20,13 @@ org_opennms_features_vaadin_components_graph_DynamicGraph = function() {
     if (this.getState().end != undefined && this.getState().end != null) {
     	div.setAttribute('data-graph-end', this.getState().end);
     }
+    if (this.getState().widthRatio != undefined && this.getState().widthRatio != null) {
+    	div.setAttribute('data-width-ratio', this.getState().widthRatio);
+    }
+    if (this.getState().heightRatio != undefined && this.getState().heightRatio != null) {
+    	div.setAttribute('data-height-ratio', this.getState().heightRatio);
+    }
+
     e.appendChild(div);
 
     DynamicGraph.run();

@@ -48,4 +48,7 @@ public class DynamicGraphState extends JavaScriptComponentState {
 
     public String title;
 
+    public Double widthRatio;
+    public Double heightRatio;
+
 }

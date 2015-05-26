@@ -56,11 +56,11 @@ DynamicGraph = (function () {
     el.html('<img class="graph-placeholder" data-src="holder.js/' + dim.width + 'x' + dim.height + '?text=' + def.graphTitle + '">');
   };
 
-  var getDimensionsForElement = function(el) {
-    var width = Math.round(el.width() * 0.8);
+  var getDimensionsForElement = function(el, def) {
+    var width = Math.round(el.width() * def.widthRatio);
     return {
       'width': width,
-      'height': Math.round(width * 0.3)
+      'height': Math.round(width * def.heightRatio)
     };
   };
 
@@ -79,7 +79,9 @@ DynamicGraph = (function () {
         'start': el.data("graph-start"),
         'end': el.data("graph-end"),
         'zooming': el.data("graph-zooming"),
-        'zoomable': el.data("graph-zoomable")
+        'zoomable': el.data("graph-zoomable"),
+        'widthRatio': el.data("width-ratio"),
+        'heightRatio': el.data("height-ratio")
       };
 
       // Use sane defaults
@@ -89,9 +91,15 @@ DynamicGraph = (function () {
       if (def.start === undefined || def.start === null) {
         def.start = def.end - (24 * 60 * 60 * 1000); // 24 hours ago.
       }
+      if (def.widthRatio === undefined || def.widthRatio === null) {
+        def.widthRatio = 0.8;
+      }
+      if (def.heightRatio === undefined || def.heightRatio === null) {
+        def.heightRatio = 0.3;
+      }
 
       // Determine the target dimensions
-      var dim = getDimensionsForElement(el);
+      var dim = getDimensionsForElement(el, def);
 
       // Render the appropriate graph
       var drawStaticGraphs = (window.onmsGraphs != undefined && window.onmsGraphs.static);

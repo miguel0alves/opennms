@@ -73,6 +73,14 @@ public class DynamicGraph extends AbstractJavaScriptComponent {
         getState().end = end.getTime();
     }
 
+    public void setWidthRatio(Double widthRatio) {
+        getState().widthRatio = widthRatio;
+    }
+
+    public void setHeightRatio(Double heightRatio) {
+        getState().heightRatio = heightRatio;
+    }
+
     @Override
     protected DynamicGraphState getState() {
         return (DynamicGraphState) super.getState();
