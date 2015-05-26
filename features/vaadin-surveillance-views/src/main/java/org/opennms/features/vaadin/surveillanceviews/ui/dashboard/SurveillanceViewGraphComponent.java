@@ -263,6 +263,8 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
             // Use all of the available width
             graph.setWidthRatio(1.0d);
             graph.setWidth(100, Unit.PERCENTAGE);
+            // Use a smaller height ratio
+            graph.setHeightRatio(0.2d);
             m_graphLayout.addComponent(graph);
         }
     }
