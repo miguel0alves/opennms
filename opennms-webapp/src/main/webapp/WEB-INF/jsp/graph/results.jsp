@@ -214,7 +214,7 @@
 		                        </c:if>
 		                    </c:if>
 	                    </div> <!-- graph-aux-controls -->
-	                    <div class="dynamic-graph" data-graph-zoomable="true" data-resource-id="${resultSet.resource.id}" data-graph-name="${graph.name}" data-graph-title="${graph.title}" data-graph-start="${results.start.time}" data-graph-end="${results.end.time}" data-graph-zooming="${param.zoom}"></div>
+	                    <div class="graph-container" data-graph-zoomable="true" data-resource-id="${resultSet.resource.id}" data-graph-name="${graph.name}" data-graph-title="${graph.title}" data-graph-start="${results.start.time}" data-graph-end="${results.end.time}" data-graph-zooming="${param.zoom}"></div>
                     </div>
                     <br/><br/>
                 </c:forEach>

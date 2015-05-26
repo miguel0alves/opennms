@@ -35,7 +35,7 @@ import com.vaadin.server.Page;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.BaseTheme;
 
-import org.opennms.features.vaadin.components.graph.DynamicGraph;
+import org.opennms.features.vaadin.components.graph.GraphContainer;
 import org.opennms.netmgt.dao.api.NodeDao;
 
 public class RrdGraphEntry extends Panel {
@@ -183,7 +183,7 @@ public class RrdGraphEntry extends Panel {
             m_removeButton.setVisible(false);
         } else {
             String graphName = RrdGraphHelper.getGraphNameFromQuery(m_graphUrl);
-            DynamicGraph graph = new DynamicGraph(graphName, m_resourceId);
+            GraphContainer graph = new GraphContainer(graphName, m_resourceId);
             graph.setTitle(m_graphLabel);
             // Setup the time span
             Calendar cal = new GregorianCalendar();

@@ -1,17 +1,16 @@
-org_opennms_features_vaadin_components_graph_DynamicGraph = function() {
+org_opennms_features_vaadin_components_graph_GraphContainer = function() {
   var e = this.getElement();
-  console.log("dynamicGraph - onInit()");
 
   this.onStateChange = function() {
-    console.log("dynamicGraph - onStateChange()");
-
-    window.onmsGraphs = {
+	// Globals
+    window.onmsGraphContainers = {
         'baseHref': this.getState().baseHref,
         'engine': this.getState().engine
     };
 
+    // Build the div
     var div = document.createElement('div');
-    div.setAttribute('class', 'dynamic-graph');
+    div.setAttribute('class', 'graph-container');
     div.setAttribute('data-resource-id', this.getState().resourceId);
     div.setAttribute('data-graph-name', this.getState().graphName);
     if (this.getState().start != undefined && this.getState().start != null) {
@@ -30,8 +29,15 @@ org_opennms_features_vaadin_components_graph_DynamicGraph = function() {
     	div.setAttribute('data-graph-title', this.getState().title);
     }
 
+    // Remove any existing children
+    while (e.firstChild) {
+        e.removeChild(e.firstChild);
+    }
+
+    // Add our div
     e.appendChild(div);
 
-    DynamicGraph.run();
+    // Render
+    GraphContainers.render();
   }
 }

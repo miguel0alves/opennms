@@ -1,8 +1,12 @@
 /**
- * Detects and populates graph <div>s.
+ * Allows pre-fabricated graphs to be rendered using different graphing engines.
+ *
+ * This function aims to centralize all of the logic required to determine the
+ * appropriate engine and trigger the rendering of the graphs.
+ *
+ * @author jwhite
  */
-
-DynamicGraph = (function () {
+GraphContainers = (function () {
   "use strict";
 
   var $j = jQuery.noConflict(); // Avoid conflicts with prototype.js used by graph/cropper/zoom.js
@@ -19,7 +23,7 @@ DynamicGraph = (function () {
       'width': dim.width,
       'height': dim.height
     };
-    var graphUrl = window.onmsGraphs.baseHref + "graph/graph.png?" + $j.param(graphUrlParams);
+    var graphUrl = window.onmsGraphContainers.baseHref + "graph/graph.png?" + $j.param(graphUrlParams);
 
     var altSuffix;
     var imgTagAttrs = "";
@@ -41,7 +45,7 @@ DynamicGraph = (function () {
         'end': def.end
       };
 
-      var zoomUrl = window.onmsGraphs.baseHref + 'graph/results.htm?' + $j.param(zoomUrlParams);
+      var zoomUrl = window.onmsGraphContainers.baseHref + 'graph/results.htm?' + $j.param(zoomUrlParams);
       graphDom = '<a href="' + zoomUrl + '">' + graphDom + '</a>';
     }
 
@@ -76,10 +80,10 @@ DynamicGraph = (function () {
     };
   };
 
-  var run = function () {
+  var render = function () {
     var didDrawOneOrMorePlaceholders = false;
 
-    $j(".dynamic-graph").each(function () {
+    $j(".graph-container").each(function () {
       // Grab the element
       var el = $j(this);
 
@@ -123,7 +127,7 @@ DynamicGraph = (function () {
 
       // Render the graph using the appropriate engine
       var drawGraphUsingPlaceholder = false;
-      if (window.onmsGraphs != undefined && "placeholder" === window.onmsGraphs.engine) {
+      if (window.onmsGraphContainers != undefined && "placeholder" === window.onmsGraphContainers.engine) {
         drawGraphUsingPlaceholder = true;
       }
 
@@ -143,12 +147,12 @@ DynamicGraph = (function () {
     }
   };
 
-  // Automatically trigger a run on load
+  // Automatically trigger a render() on load
   $j(function () {
-    run();
+    render();
   });
 
   return {
-    run: run
+    render: render
   }
 })();

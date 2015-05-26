@@ -32,7 +32,7 @@ import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.*;
 
-import org.opennms.features.vaadin.components.graph.DynamicGraph;
+import org.opennms.features.vaadin.components.graph.GraphContainer;
 import org.opennms.features.vaadin.dashboard.model.*;
 
 import java.util.Calendar;
@@ -297,7 +297,7 @@ public class RrdDashlet extends AbstractDashlet {
         String graphName = RrdGraphHelper.getGraphNameFromQuery(getDashletSpec().getParameters().get("graphUrl" + i));
         String resourceId = getDashletSpec().getParameters().get("resourceId" + i);
 
-        DynamicGraph graph = new DynamicGraph(graphName, resourceId);
+        GraphContainer graph = new GraphContainer(graphName, resourceId);
         graph.setTitle(graphTitle);
         // Setup the time span
         Calendar cal = new GregorianCalendar();

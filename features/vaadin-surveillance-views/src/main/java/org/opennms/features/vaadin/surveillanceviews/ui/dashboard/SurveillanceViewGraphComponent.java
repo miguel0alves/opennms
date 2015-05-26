@@ -37,7 +37,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.VerticalLayout;
 
-import org.opennms.features.vaadin.components.graph.DynamicGraph;
+import org.opennms.features.vaadin.components.graph.GraphContainer;
 import org.opennms.features.vaadin.surveillanceviews.service.SurveillanceViewService;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsNode;
@@ -254,7 +254,7 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         m_graphLayout.removeAllComponents();
 
         if (graphName != null && resourceId != null) {
-            final DynamicGraph graph = new DynamicGraph(graphName, resourceId);
+            final GraphContainer graph = new GraphContainer(graphName, resourceId);
             // Span the last hour
             final Calendar calendar = new GregorianCalendar();
             graph.setEnd(calendar.getTime());

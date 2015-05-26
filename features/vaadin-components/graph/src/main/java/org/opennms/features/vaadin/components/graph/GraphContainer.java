@@ -30,17 +30,13 @@ package org.opennms.features.vaadin.components.graph;
 import java.util.Date;
 
 import com.vaadin.annotations.JavaScript;
-import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.AbstractJavaScriptComponent;
 
 /**
- * Renders pre-fabricated graphs.
+ * Graph container that allows pre-fabricated graphs to be
+ * rendered using different graphing engines.
  *
- * Using this components allows the graphing implementation to be chosen at run-time
- * using Javascript.
- *
- * The graph may be rendered server-side via an image tag or client-side using
- * a Javascript-based graphing stack.
+ * See js/graph.js for details.
  *
  * @author jwhite
  */
@@ -51,13 +47,13 @@ import com.vaadin.ui.AbstractJavaScriptComponent;
     "jquery.min.js",
     "holder.min.js",
     "graph.js",
-    "dynamicgraph-connector.js"
+    "graphcontainer-connector.js"
 })
-public class DynamicGraph extends AbstractJavaScriptComponent {
+public class GraphContainer extends AbstractJavaScriptComponent {
     private static final long serialVersionUID = 3363043899957566308L;
 
-    public DynamicGraph(final String graphName, final String resourceId) {
-        final DynamicGraphState state = getState();
+    public GraphContainer(final String graphName, final String resourceId) {
+        final GraphContainerState state = getState();
         state.graphName = graphName;
         state.resourceId = resourceId;
 
@@ -89,7 +85,7 @@ public class DynamicGraph extends AbstractJavaScriptComponent {
     }
 
     @Override
-    protected DynamicGraphState getState() {
-        return (DynamicGraphState) super.getState();
+    protected GraphContainerState getState() {
+        return (GraphContainerState) super.getState();
     }
 }

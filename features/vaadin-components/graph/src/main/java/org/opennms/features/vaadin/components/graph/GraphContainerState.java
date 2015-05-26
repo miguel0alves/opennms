@@ -34,7 +34,7 @@ import com.vaadin.shared.ui.JavaScriptComponentState;
  *
  * @author jwhite
  */
-public class DynamicGraphState extends JavaScriptComponentState {
+public class GraphContainerState extends JavaScriptComponentState {
     private static final long serialVersionUID = -6846721022019894325L;
 
     public String baseHref = "/opennms/";
