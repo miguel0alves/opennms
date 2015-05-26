@@ -84,6 +84,14 @@ DynamicGraph = (function () {
         'heightRatio': el.data("height-ratio")
       };
 
+      // Skip the entry when any of the required fields are missing
+      if (def.resourceId === undefined || def.resourceId === null || def.resourceId === "") {
+        return;
+      }
+      if (def.graphName === undefined || def.graphName === null || def.graphName === "") {
+        return;
+      }
+
       // Use sane defaults
       if (def.end === undefined || def.end === null) {
         def.end = new Date().getTime();
