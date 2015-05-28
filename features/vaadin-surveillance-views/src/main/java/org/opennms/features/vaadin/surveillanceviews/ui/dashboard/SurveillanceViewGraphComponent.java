@@ -221,6 +221,16 @@ public class SurveillanceViewGraphComponent extends VerticalLayout implements Su
         m_graphLayout.setId("graphLayout");
 
         /**
+         * ...and call it when page is constructed. Also add a resize listener...
+         */
+        addAttachListener(new AttachListener() {
+            @Override
+            public void attach(AttachEvent attachEvent) {
+                getUI().getPage().addBrowserWindowResizeListener(SurveillanceViewGraphComponent.this);
+            }
+        });
+
+        /**
          * ... and remove the resize listener on detach event
          */
         addDetachListener(new DetachListener() {
