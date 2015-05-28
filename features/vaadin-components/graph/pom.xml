@@ -40,14 +40,16 @@
                     <directory>../../../opennms-webapp/src/main/webapp/js</directory>
                     <includes>
                       <include>graph.js</include>
-                      <include>holder.min.js</include>
                     </includes>
                   </resource>
                   <resource>
                     <directory>../../../opennms-webapp/src/main/webapp/lib/jquery/dist</directory>
+                    <includes>
+                      <include>jquery.min.js</include>
+                    </includes>
                   </resource>
-                </resources>              
-              </configuration>            
+                </resources>
+              </configuration>
             </execution>
           </executions>
         </plugin>

@@ -11,6 +11,90 @@ GraphContainers = (function () {
 
   var $j = jQuery.noConflict(); // Avoid conflicts with prototype.js used by graph/cropper/zoom.js
 
+  var librariesLoaded = {};
+  var dependenciesResolved = false;
+
+  var getGraphingEngine = function() {
+    var graphingEngine = "png";
+    if (window.onmsGraphContainers !== undefined
+          && window.onmsGraphContainers.engine !== undefined
+          && window.onmsGraphContainers.engine !== null) {
+        graphingEngine = window.onmsGraphContainers.engine;
+    }
+    return graphingEngine.toLowerCase();
+  };
+
+  var loadCSS = function(href) {
+    var cssLink = $j("<link rel='stylesheet' type='text/css' href='"+window.onmsGraphContainers.baseHref+href+"'>");
+    $j("head").append(cssLink);
+  };
+
+  var loadJS = function(src) {
+    return $j.getScript(window.onmsGraphContainers.baseHref+src);
+  };
+
+  /**
+   * Waits for the libraries to be executed (not just loaded) by
+   * listening for events.
+   *
+   * Every library that is used must contain a snippet of the form:
+   *   jQuery(document).trigger("libraryLoaded", "name");
+   *
+   */
+  var waitForLibraries = function(libraries, dfd) {
+    var k, n = libraries.length, missingLibrary;
+    $j(document).on("libraryLoaded", {}, function(event, name) {
+      //console.log("Got library loaded for:", name);
+      librariesLoaded[name] = true;
+
+      missingLibrary = false;
+      for (k = 0; k < n; k++) {
+        if(!librariesLoaded.hasOwnProperty(libraries[k])) {
+          //console.log("Still missing: " + libraries[k]);
+          missingLibrary = true;
+          break;
+        }
+      }
+
+      if (!missingLibrary) {
+        dfd.resolve();
+      }
+    });
+  };
+
+  /**
+   * Load the dependenices required by the target graphing engine
+   * and return a promise that will resolve once these are
+   * ready to be used.
+   */
+  var loadDependencies = function() {
+    var dfd = $j.Deferred();
+
+    if (window.onmsGraphContainers === undefined) {
+      dfd.reject();
+      return dfd;
+    }
+
+    var graphingEngine = getGraphingEngine();
+    if (graphingEngine == "placeholder") {
+      loadJS("js/holder.min.js")
+        .then(waitForLibraries(["holder"], dfd));
+    } else if (graphingEngine == "backshift") {
+      loadCSS("lib/c3/c3.min.css");
+      loadJS("js/holder.min.js")
+        .then(loadJS("lib/d3/d3.min.js"))
+        .then(loadJS("lib/c3/c3.min.js"))
+        .then(loadJS("lib/rsvp/rsvp.min.js"))
+        .then(loadJS("js/backshift.onms.min.js"))
+        .then(waitForLibraries(["holder", "d3", "c3", "rsvp", "backshift"], dfd));
+    } else {
+      // Nothing to load
+      dfd.resolve();
+    }
+
+    return dfd;
+  };
+
   /**
    * Renders the graph with an image tag pointed to graph/graph.png
    */
@@ -64,12 +148,58 @@ GraphContainers = (function () {
    */
   var drawPlaceholderGraph = function(el, def, dim) {
     var text = def.graphTitle;
-    // Use the dimensions if no title is set
+
     if (text === undefined || text === null) {
+      // Use the dimensions if no title is set
       text = dim.width + 'x' + dim.height;
+    } else {
+      // Append the dimensions otherwise
+      text += " (" +  dim.width + 'x' + dim.height + ")";
     }
 
     el.html('<img class="graph-placeholder" data-src="holder.js/' + dim.width + 'x' + dim.height + '?text=' + text + '">');
+  };
+
+  /**
+   * Renders the graph using Backshift
+   */
+  var drawBackshiftGraph = function(el, def, dim) {
+    // Pull in the graph definition
+    $j.ajax({
+      url: window.onmsGraphContainers.baseHref + 'rest/graphs/' + encodeURIComponent(def.graphName),
+      dataType: 'json'
+    }).done(function (graphDef) {
+      // Convert the graph definition to a supported model
+      var rrdGraphConverter = new Backshift.Utilities.RrdGraphConverter({
+        graphDef: graphDef,
+        resourceId: def.resourceId
+      });
+      var graphModel = rrdGraphConverter.model;
+
+      // Build the data-source
+      var ds = new Backshift.DataSource.OpenNMS({
+        url: window.onmsGraphContainers.baseHref + "rest/measurements",
+        metrics: graphModel.metrics
+      });
+
+      // Build and render the graph
+      var graph = new Backshift.Graph.C3({
+        element: el[0],
+        width: dim.width,
+        height: dim.height,
+        start: def.start,
+        end: def.end,
+        dataSource: ds,
+        series: graphModel.series,
+        step: true,
+        title: graphModel.title,
+        verticalLabel: graphModel.verticalLabel
+      });
+      graph.render();
+    }).fail(function(jqXHR, textStatus) {
+      var text = "Request failed: " + textStatus;
+      el.html('<img class="graph-placeholder" data-src="holder.js/' + dim.width + 'x' + dim.height + '?text=' + text + '">');
+    });
   };
 
   var getDimensionsForElement = function(el, def) {
@@ -80,7 +210,15 @@ GraphContainers = (function () {
     };
   };
 
-  var render = function () {
+  var render = function() {
+    if (!dependenciesResolved) {
+      loadDependencies().done(_render());
+    } else {
+      _render();
+    }
+  };
+
+  var _render = function () {
     var didDrawOneOrMorePlaceholders = false;
 
     $j(".graph-container").each(function () {
@@ -126,13 +264,16 @@ GraphContainers = (function () {
       var dim = getDimensionsForElement(el, def);
 
       // Render the graph using the appropriate engine
-      var drawGraphUsingPlaceholder = false;
-      if (window.onmsGraphContainers != undefined && "placeholder" === window.onmsGraphContainers.engine) {
-        drawGraphUsingPlaceholder = true;
+      var graphingEngine = "png";
+      if (window.onmsGraphContainers != undefined) {
+        graphingEngine = window.onmsGraphContainers.engine;
       }
 
-      if (drawGraphUsingPlaceholder) {
+      if (graphingEngine === "placeholder") {
         drawPlaceholderGraph(el, def, dim);
+        didDrawOneOrMorePlaceholders = true;
+      } else if (graphingEngine === "backshift") {
+        drawBackshiftGraph(el, def, dim);
         didDrawOneOrMorePlaceholders = true;
       } else {
         drawPngGraph(el, def, dim);
@@ -143,11 +284,13 @@ GraphContainers = (function () {
     });
 
     if (didDrawOneOrMorePlaceholders) {
-      Holder.run({images: ".graph-placeholder"});
+      if (window.Holder !== undefined) {
+        Holder.run({images: ".graph-placeholder"});
+      }
     }
   };
 
-  // Automatically trigger a render() on load
+  // Automatically trigger a render on load
   $j(function () {
     render();
   });

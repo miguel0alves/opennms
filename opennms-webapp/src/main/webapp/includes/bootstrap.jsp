@@ -119,7 +119,6 @@
         window.onmsGraphContainers.baseHref = '<%= baseHref %>';
       </script>
       <script type="text/javascript" src="<%= baseHref %>js/graph.js"></script>
-      <script src="<%= baseHref %>js/holder.min.js"></script>
     </c:if>
 
 <c:forEach var="script" items="${paramValues.script}">
